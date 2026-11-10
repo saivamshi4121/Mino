@@ -121,10 +121,85 @@
 /* ── Expanded content ── */
 .island-expanded-content {
   display: flex;
+  align-items: stretch;
+  justify-content: space-evenly;
+  width: 100%;
+  max-width: 380px;
+  gap: 24px;
+}
+
+.island-widget {
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  min-width: 0;
+}
+
+.island-clock {
+  gap: 4px;
+}
+
+.island-clock-time {
+  color: var(--island-text-primary);
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: 0.4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-clock-date {
+  color: var(--island-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.island-battery {
+  gap: 5px;
+  min-width: 100px;
+  color: var(--island-text-secondary);
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+
+.island-battery--charging {
+  color: #86efac;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.45));
+}
+
+.island-battery-icon {
+  width: 36px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.island-battery-terminal {
+  fill: currentColor;
+  stroke: none;
+}
+
+.island-battery-level {
+  fill: currentColor;
+  stroke: none;
+}
+
+.island-battery-bolt {
+  fill: #000;
+  stroke: none;
+}
+
+.island-battery-percent {
+  color: var(--island-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-battery-status {
+  font-size: 12px;
 }
 
 /* ── Listening state ── */

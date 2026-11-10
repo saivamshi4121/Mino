@@ -1,12 +1,21 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { loadModules, type ModuleEmitter } from './modules'
+import type { IslandModuleEvent } from '../shared/moduleEvents'
 
 const WINDOW_WIDTH = 640
 const WINDOW_HEIGHT = 300
 const WINDOW_Y = 8
 
 let mainWindow: BrowserWindow | null = null
+let stopModules: (() => void) | undefined
+
+const emitModuleEvent: ModuleEmitter = (event: IslandModuleEvent): void => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('island:module-event', event)
+  }
+}
 
 function getCentredX(): number {
   const primary = screen.getPrimaryDisplay()
@@ -42,6 +51,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow!.show()
+    stopModules = loadModules(emitModuleEvent)
   })
 
   // Load renderer
@@ -80,6 +90,11 @@ app.whenReady().then(() => {
   screen.on('display-metrics-changed', recentreWindow)
   screen.on('display-added', recentreWindow)
   screen.on('display-removed', recentreWindow)
+})
+
+app.on('before-quit', () => {
+  stopModules?.()
+  stopModules = undefined
 })
 
 app.on('window-all-closed', () => {

@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMachine } from '@xstate/react'
 import { islandMachine, ISLAND_SIZES, type IslandState, type IslandEvent } from './islandMachine'
+import type { IslandModuleEvent } from '../../../shared/moduleEvents'
+import BatteryWidget from '../widgets/BatteryWidget'
+import ClockWidget from '../widgets/ClockWidget'
 
 /** Spring config matching the spec: stiffness 300, damping 25 */
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25 }
@@ -20,6 +23,21 @@ export default function Island(): React.JSX.Element {
   const state = snapshot.value as IslandState
   const size = ISLAND_SIZES[state]
   const [contentVisible, setContentVisible] = useState(false)
+  const [battery, setBattery] = useState<{ percent: number | null; charging: boolean }>({
+    percent: null,
+    charging: false
+  })
+
+  useEffect(() => {
+    const handleModuleEvent = (event: IslandModuleEvent): void => {
+      if (event.type === 'battery.update') {
+        setBattery(event.payload)
+      } else if (event.type === 'ALERT') {
+        send({ type: 'ALERT', payload: event.payload })
+      }
+    }
+    return window.island.onModuleEvent(handleModuleEvent)
+  }, [send])
 
   const handleMouseEnter = useCallback((): void => {
     window.island.setHover(true)
@@ -88,8 +106,8 @@ export default function Island(): React.JSX.Element {
             )}
             {state === 'expanded' && (
               <div className="island-expanded-content">
-                <span className="island-label-large">Mino</span>
-                <span className="island-sublabel">Dynamic Island for Windows</span>
+                <ClockWidget />
+                <BatteryWidget percent={battery.percent} charging={battery.charging} />
               </div>
             )}
             {state === 'alert' && snapshot.context.alert && (
