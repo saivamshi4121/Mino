@@ -1,0 +1,167 @@
+import { useState, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useMachine } from '@xstate/react'
+import { islandMachine, ISLAND_SIZES, type IslandState, type IslandEvent } from './islandMachine'
+
+/** Spring config matching the spec: stiffness 300, damping 25 */
+const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25 }
+
+/** Glow colours per state */
+const GLOW_COLORS: Record<IslandState, string> = {
+  idle: 'rgba(255,255,255,0.0)',
+  compact: 'rgba(255,255,255,0.08)',
+  listening: 'rgba(56,189,248,0.35)',
+  expanded: 'rgba(255,255,255,0.12)',
+  alert: 'rgba(251,146,60,0.4)'
+}
+
+export default function Island(): React.JSX.Element {
+  const [snapshot, send] = useMachine(islandMachine)
+  const state = snapshot.value as IslandState
+  const size = ISLAND_SIZES[state]
+  const [contentVisible, setContentVisible] = useState(false)
+
+  const handleMouseEnter = useCallback((): void => {
+    window.island.setHover(true)
+    if (state === 'idle') send({ type: 'HOVER' })
+  }, [state, send])
+
+  const handleMouseLeave = useCallback((): void => {
+    window.island.setHover(false)
+    if (state === 'compact') send({ type: 'OUTSIDE' })
+  }, [state, send])
+
+  const handleClick = useCallback((): void => {
+    if (state === 'alert') {
+      send({ type: 'DISMISS' })
+    } else if (state !== 'expanded') {
+      send({ type: 'CLICK' })
+    } else {
+      send({ type: 'OUTSIDE' })
+    }
+  }, [state, send])
+
+  return (
+    <div className="island-container">
+      <motion.div
+        className={`island-pill island-state--${state}`}
+        layout
+        animate={{
+          width: size.width,
+          height: size.height,
+          borderRadius: size.borderRadius,
+          boxShadow: `0 4px 24px 0 ${GLOW_COLORS[state]}, 0 2px 8px rgba(0,0,0,0.6)`
+        }}
+        transition={SPRING}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+        onAnimationComplete={() => setContentVisible(true)}
+      >
+        {/* Gloss overlay */}
+        <div className="island-gloss" />
+        {/* Specular glint */}
+        <div className="island-glint" />
+
+        {/* Content area – fades in after shape settles */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={state}
+            className="island-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: contentVisible ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.08 }}
+            onAnimationStart={() => setContentVisible(false)}
+          >
+            {state === 'idle' && null}
+            {state === 'compact' && (
+              <span className="island-label">Mino</span>
+            )}
+            {state === 'listening' && (
+              <div className="island-listening">
+                <div className="island-listening-bars">
+                  <span /><span /><span /><span /><span />
+                </div>
+                <span className="island-label">Listening…</span>
+              </div>
+            )}
+            {state === 'expanded' && (
+              <div className="island-expanded-content">
+                <span className="island-label-large">Mino</span>
+                <span className="island-sublabel">Dynamic Island for Windows</span>
+              </div>
+            )}
+            {state === 'alert' && snapshot.context.alert && (
+              <div className="island-alert-content">
+                <span className="island-alert-title">{snapshot.context.alert.title}</span>
+                {snapshot.context.alert.message && (
+                  <span className="island-alert-message">{snapshot.context.alert.message}</span>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Dev panel */}
+      <DevPanel send={send} currentState={state} />
+    </div>
+  )
+}
+
+/* ── Dev Panel (toggle with backtick `) ── */
+
+function DevPanel({
+  send,
+  currentState
+}: {
+  send: (event: IslandEvent) => void
+  currentState: IslandState
+}): React.JSX.Element {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      if (e.key === '`') setVisible((v) => !v)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  if (!visible) return <></>
+
+  return (
+    <div className="dev-panel">
+      <div className="dev-panel-title">Dev Panel (`) — State: {currentState}</div>
+      <div className="dev-panel-buttons">
+        <button onClick={() => send({ type: 'HOVER' })}>HOVER</button>
+        <button onClick={() => send({ type: 'CLICK' })}>CLICK</button>
+        <button onClick={() => send({ type: 'OUTSIDE' })}>OUTSIDE</button>
+        <button onClick={() => send({ type: 'LISTEN_START' })}>LISTEN_START</button>
+        <button onClick={() => send({ type: 'LISTEN_END' })}>LISTEN_END</button>
+        <button
+          onClick={() =>
+            send({
+              type: 'ALERT',
+              payload: { title: 'Battery Low', message: '15% remaining', type: 'warning' }
+            })
+          }
+        >
+          ALERT (warning)
+        </button>
+        <button
+          onClick={() =>
+            send({
+              type: 'ALERT',
+              payload: { title: 'Timer Done!', type: 'success' }
+            })
+          }
+        >
+          ALERT (success)
+        </button>
+        <button onClick={() => send({ type: 'DISMISS' })}>DISMISS</button>
+      </div>
+    </div>
+  )
+}

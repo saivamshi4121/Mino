@@ -1,0 +1,248 @@
+/* ── Island CSS Variables & Styles ── */
+
+:root {
+  /* Base colours */
+  --island-bg-top: #16161c;
+  --island-bg-bottom: #000000;
+  --island-border-top: rgba(255, 255, 255, 0.2);
+  --island-gloss-opacity: 0.18;
+  --island-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+
+  /* State glow colours */
+  --glow-idle: rgba(255, 255, 255, 0.0);
+  --glow-compact: rgba(255, 255, 255, 0.08);
+  --glow-listening: rgba(56, 189, 248, 0.35);
+  --glow-expanded: rgba(255, 255, 255, 0.12);
+  --glow-alert: rgba(251, 146, 60, 0.4);
+
+  /* Alert type colours */
+  --alert-info: rgba(56, 189, 248, 0.5);
+  --alert-warning: rgba(251, 146, 60, 0.5);
+  --alert-success: rgba(74, 222, 128, 0.5);
+  --alert-error: rgba(248, 113, 113, 0.5);
+
+  /* Text */
+  --island-text-primary: rgba(255, 255, 255, 0.92);
+  --island-text-secondary: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Pill ── */
+.island-pill {
+  position: relative;
+  background: linear-gradient(180deg, var(--island-bg-top) 0%, var(--island-bg-bottom) 100%);
+  border-top: 1px solid var(--island-border-top);
+  overflow: hidden;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* GPU layer for smooth animation */
+  will-change: width, height, border-radius, box-shadow;
+}
+
+/* ── Glossy top-half highlight ── */
+.island-gloss {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, var(--island-gloss-opacity)) 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Subtle moving specular glint ── */
+.island-glint {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: glint-sweep 6s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes glint-sweep {
+  0%, 100% {
+    transform: translateX(0%);
+  }
+  50% {
+    transform: translateX(400%);
+  }
+}
+
+/* ── Content area ── */
+.island-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
+}
+
+/* ── Labels ── */
+.island-label {
+  color: var(--island-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.island-label-large {
+  color: var(--island-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.island-sublabel {
+  color: var(--island-text-secondary);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ── Expanded content ── */
+.island-expanded-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* ── Listening state ── */
+.island-listening {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.island-listening-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+
+.island-listening-bars span {
+  display: block;
+  width: 3px;
+  background: rgba(56, 189, 248, 0.9);
+  border-radius: 2px;
+  animation: bar-bounce 1s ease-in-out infinite;
+}
+
+.island-listening-bars span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.island-listening-bars span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+.island-listening-bars span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+.island-listening-bars span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
+.island-listening-bars span:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+
+@keyframes bar-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+/* ── Alert content ── */
+.island-alert-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.island-alert-title {
+  color: var(--island-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.island-alert-message {
+  color: var(--island-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── State-specific glow via class ── */
+.island-state--idle { }
+
+.island-state--compact {
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.island-state--listening {
+  border-top-color: rgba(56, 189, 248, 0.4);
+}
+
+.island-state--expanded {
+  border-top-color: rgba(255, 255, 255, 0.25);
+}
+
+.island-state--alert {
+  border-top-color: rgba(251, 146, 60, 0.4);
+}
+
+/* ── Dev Panel ── */
+.dev-panel {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+}
+
+.dev-panel-title {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.dev-panel-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dev-panel-buttons button {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: 'Segoe UI', monospace;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dev-panel-buttons button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
