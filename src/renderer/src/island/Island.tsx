@@ -22,7 +22,8 @@ export default function Island(): React.JSX.Element {
   const [snapshot, send] = useMachine(islandMachine)
   const state = snapshot.value as IslandState
   const size = ISLAND_SIZES[state]
-  const [contentVisible, setContentVisible] = useState(false)
+  const [contentReadyState, setContentReadyState] = useState<IslandState | null>(null)
+  const contentVisible = contentReadyState === state
   const [battery, setBattery] = useState<{ percent: number | null; charging: boolean }>({
     percent: null,
     charging: false
@@ -74,7 +75,7 @@ export default function Island(): React.JSX.Element {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        onAnimationComplete={() => setContentVisible(true)}
+        onAnimationComplete={() => setContentReadyState(state)}
       >
         {/* Gloss overlay */}
         <div className="island-gloss" />
@@ -90,7 +91,6 @@ export default function Island(): React.JSX.Element {
             animate={{ opacity: contentVisible ? 1 : 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.08 }}
-            onAnimationStart={() => setContentVisible(false)}
           >
             {state === 'idle' && null}
             {state === 'compact' && (
