@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { IslandModuleEvent } from '../shared/moduleEvents'
+import type { IslandModuleEvent, PomodoroConfig, PomodoroStats } from '../shared/moduleEvents'
 
 const island = {
   /** Tell main process whether the mouse is over the pill */
@@ -12,7 +12,31 @@ const island = {
     }
     ipcRenderer.on('island:module-event', listener)
     return () => ipcRenderer.removeListener('island:module-event', listener)
-  }
+  },
+  timer: {
+    start: (minutes: number): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'timer.start', minutes }),
+    resume: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'timer.resume' }),
+    pause: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'timer.pause' }),
+    cancel: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'timer.cancel' })
+  },
+  pomodoro: {
+    start: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.start' }),
+    pause: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.pause' }),
+    skip: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.skip' }),
+    reset: (): Promise<void> =>
+      ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.reset' })
+  },
+  getPomodoroConfig: (): Promise<PomodoroConfig> => ipcRenderer.invoke('island:pomodoro:config'),
+  getPomodoroStats: (): Promise<PomodoroStats> => ipcRenderer.invoke('island:pomodoro:stats:get'),
+  recordPomodoroRound: (): Promise<PomodoroStats> =>
+    ipcRenderer.invoke('island:pomodoro:stats:complete')
 }
 
 if (process.contextIsolated) {

@@ -1,0 +1,8 @@
+{
+  "pomodoro": {
+    "focusMinutes": 25,
+    "breakMinutes": 5,
+    "longBreakMinutes": 15,
+    "roundsUntilLongBreak": 4
+  }
+}

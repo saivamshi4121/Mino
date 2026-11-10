@@ -128,6 +128,234 @@
   gap: 24px;
 }
 
+.island-expanded-content--activities {
+  flex-direction: column;
+  justify-content: center;
+  max-width: 390px;
+  gap: 6px;
+}
+
+.island-expanded-system-widgets {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  min-height: 42px;
+}
+
+.island-expanded-system-widgets .island-clock-time {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.island-expanded-system-widgets .island-clock-date {
+  font-size: 11px;
+}
+
+.island-expanded-system-widgets .island-battery {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  column-gap: 6px;
+  row-gap: 0;
+  min-width: 0;
+}
+
+.island-expanded-system-widgets .island-battery-icon {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.island-expanded-system-widgets .island-battery-percent {
+  font-size: 15px;
+}
+
+.island-expanded-system-widgets .island-battery-status {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.activity-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  width: 100%;
+  gap: 10px;
+}
+
+.activity-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  gap: 4px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.activity-card--pomodoro {
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.activity-card-heading {
+  color: var(--island-text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.activity-card-status {
+  overflow: hidden;
+  color: var(--island-text-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-controls,
+.activity-timer-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-timer-form label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--island-text-secondary);
+  font-size: 10px;
+}
+
+.activity-timer-form input {
+  width: 42px;
+  padding: 3px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--island-text-primary);
+  font: inherit;
+  font-size: 10px;
+}
+
+.activity-controls button,
+.activity-timer-form button {
+  min-width: 0;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--island-text-primary);
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.activity-controls button:hover,
+.activity-timer-form button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.activity-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: var(--island-text-primary);
+}
+
+.activity-compact--focus .activity-ring-progress {
+  stroke: #f87171;
+}
+
+.activity-compact--break .activity-ring-progress,
+.activity-compact--longBreak .activity-ring-progress {
+  stroke: #4ade80;
+}
+
+.activity-ring-wrap {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+}
+
+.activity-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.activity-ring-track,
+.activity-ring-progress {
+  fill: none;
+  stroke-width: 3;
+}
+
+.activity-ring-track {
+  stroke: rgba(255, 255, 255, 0.14);
+}
+
+.activity-ring-progress {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.2s linear;
+}
+
+.activity-compact-time {
+  color: var(--island-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-compact-rounds {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.activity-compact-phase {
+  color: var(--island-text-secondary);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.pomodoro-round-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pomodoro-round-dot {
+  width: 5px;
+  height: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+}
+
+.pomodoro-round-dot--filled {
+  border-color: #f87171;
+  background: #f87171;
+}
+
+.activity-compact--break .pomodoro-round-dot--filled,
+.activity-compact--longBreak .pomodoro-round-dot--filled {
+  border-color: #4ade80;
+  background: #4ade80;
+}
+
+.activity-paused-label {
+  color: var(--island-text-secondary);
+  font-size: 9px;
+}
+
 .island-widget {
   display: flex;
   flex-direction: column;

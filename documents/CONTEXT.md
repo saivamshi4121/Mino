@@ -68,7 +68,7 @@ Pomodoro focus mode, listening state, offline voice (wake word "hey island" + ho
 Ctrl+Alt+Space), voice "open <app>" via Start Menu index + fuzzy match.
 
 ## Progress log (update at end of every milestone)
-- [x] M0-M3 complete; M3 adds a priority module loader, 30-second battery updates/alerts, and live clock/battery widgets.
+- [x] M0-M4 complete; M4 adds timer/Pomodoro controls, phase alerts, a chime, and persisted daily focus-round counts.
 ```
 
 **Tip:** At the end of each milestone, tell the agent: *"Update the Progress log in CONTEXT.md in one line."* This is your memory across sessions.

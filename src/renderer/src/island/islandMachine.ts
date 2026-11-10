@@ -20,6 +20,7 @@ export interface AlertPayload {
 export interface IslandContext {
   alert: AlertPayload | null
   previousState: IslandState
+  activityActive: boolean
 }
 
 export type IslandEvent =
@@ -28,6 +29,8 @@ export type IslandEvent =
   | { type: 'OUTSIDE' }
   | { type: 'LISTEN_START' }
   | { type: 'LISTEN_END' }
+  | { type: 'ACTIVITY_START' }
+  | { type: 'ACTIVITY_STOP' }
   | { type: 'ALERT'; payload: AlertPayload }
   | { type: 'DISMISS' }
 
@@ -44,13 +47,18 @@ export const islandMachine = setup({
   initial: 'idle',
   context: {
     alert: null,
-    previousState: 'idle'
+    previousState: 'idle',
+    activityActive: false
   },
   states: {
     idle: {
       on: {
         HOVER: { target: 'compact', actions: assign({ previousState: 'idle' }) },
         CLICK: { target: 'expanded', actions: assign({ previousState: 'idle' }) },
+        ACTIVITY_START: {
+          target: 'compact',
+          actions: assign({ previousState: 'idle', activityActive: true })
+        },
         LISTEN_START: { target: 'listening', actions: assign({ previousState: 'idle' }) },
         ALERT: {
           target: 'alert',
@@ -63,11 +71,16 @@ export const islandMachine = setup({
     },
     compact: {
       after: {
-        IDLE_TIMEOUT: { target: 'idle' }
+        IDLE_TIMEOUT: {
+          target: 'idle',
+          guard: ({ context }) => !context.activityActive
+        }
       },
       on: {
         CLICK: { target: 'expanded', actions: assign({ previousState: 'compact' }) },
         OUTSIDE: { target: 'idle' },
+        ACTIVITY_START: { actions: assign({ activityActive: true }) },
+        ACTIVITY_STOP: { target: 'idle', actions: assign({ activityActive: false }) },
         LISTEN_START: { target: 'listening', actions: assign({ previousState: 'compact' }) },
         ALERT: {
           target: 'alert',
@@ -95,7 +108,15 @@ export const islandMachine = setup({
         IDLE_TIMEOUT: { target: 'idle' }
       },
       on: {
-        OUTSIDE: { target: 'idle' },
+        OUTSIDE: [
+          { guard: ({ context }) => context.activityActive, target: 'compact' },
+          { target: 'idle' }
+        ],
+        ACTIVITY_START: {
+          target: 'compact',
+          actions: assign({ previousState: 'expanded', activityActive: true })
+        },
+        ACTIVITY_STOP: { target: 'idle', actions: assign({ activityActive: false }) },
         LISTEN_START: { target: 'listening', actions: assign({ previousState: 'expanded' }) },
         ALERT: {
           target: 'alert',
@@ -108,10 +129,28 @@ export const islandMachine = setup({
     },
     alert: {
       after: {
-        IDLE_TIMEOUT: { target: 'idle', actions: assign({ alert: null }) }
+        IDLE_TIMEOUT: [
+          {
+            guard: ({ context }) => context.previousState === 'compact',
+            target: 'compact',
+            actions: assign({ alert: null })
+          },
+          { target: 'idle', actions: assign({ alert: null }) }
+        ]
       },
       on: {
-        DISMISS: { target: 'idle', actions: assign({ alert: null }) },
+        ACTIVITY_START: {
+          actions: assign({ previousState: 'compact', activityActive: true })
+        },
+        ACTIVITY_STOP: { actions: assign({ previousState: 'idle', activityActive: false }) },
+        DISMISS: [
+          {
+            guard: ({ context }) => context.previousState === 'compact',
+            target: 'compact',
+            actions: assign({ alert: null })
+          },
+          { target: 'idle', actions: assign({ alert: null }) }
+        ],
         ALERT: {
           target: 'alert',
           actions: assign({

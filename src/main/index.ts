@@ -3,6 +3,9 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { loadModules, type ModuleEmitter } from './modules'
 import type { IslandModuleEvent } from '../shared/moduleEvents'
+import type { ActivityCommand } from '../shared/moduleEvents'
+import defaultConfig from '../../config/default.json'
+import { getTodayPomodoroStats, recordPomodoroRound } from './modules/pomodoroStats'
 
 const WINDOW_WIDTH = 640
 const WINDOW_HEIGHT = 300
@@ -14,6 +17,30 @@ let stopModules: (() => void) | undefined
 const emitModuleEvent: ModuleEmitter = (event: IslandModuleEvent): void => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('island:module-event', event)
+  }
+}
+
+function isActivityCommand(value: unknown): value is ActivityCommand {
+  if (typeof value !== 'object' || value === null || !('type' in value)) return false
+  switch (value.type) {
+    case 'timer.start':
+      return (
+        'minutes' in value &&
+        typeof value.minutes === 'number' &&
+        Number.isFinite(value.minutes) &&
+        value.minutes > 0 &&
+        value.minutes <= 24 * 60
+      )
+    case 'timer.pause':
+    case 'timer.resume':
+    case 'timer.cancel':
+    case 'pomodoro.start':
+    case 'pomodoro.pause':
+    case 'pomodoro.skip':
+    case 'pomodoro.reset':
+      return true
+    default:
+      return false
   }
 }
 
@@ -82,6 +109,20 @@ app.whenReady().then(() => {
     } else {
       mainWindow.setIgnoreMouseEvents(true, { forward: true })
     }
+  })
+
+  ipcMain.handle('island:activity-command', (_event, command: unknown) => {
+    if (!isActivityCommand(command)) {
+      throw new TypeError('Invalid timer or Pomodoro command')
+    }
+    emitModuleEvent({ type: 'activity.command', payload: command })
+  })
+  ipcMain.handle('island:pomodoro:config', () => defaultConfig.pomodoro)
+  ipcMain.handle('island:pomodoro:stats:get', () => getTodayPomodoroStats())
+  ipcMain.handle('island:pomodoro:stats:complete', async () => {
+    const stats = await recordPomodoroRound()
+    emitModuleEvent({ type: 'pomodoro.stats', payload: stats })
+    return stats
   })
 
   createWindow()

@@ -5,6 +5,8 @@ import { islandMachine, ISLAND_SIZES, type IslandState, type IslandEvent } from 
 import type { IslandModuleEvent } from '../../../shared/moduleEvents'
 import BatteryWidget from '../widgets/BatteryWidget'
 import ClockWidget from '../widgets/ClockWidget'
+import ActivityWidgets, { ActivityCompactWidget } from '../widgets/ActivityWidgets'
+import { useActivities } from './useActivities'
 
 /** Spring config matching the spec: stiffness 300, damping 25 */
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25 }
@@ -24,6 +26,14 @@ export default function Island(): React.JSX.Element {
   const size = ISLAND_SIZES[state]
   const [contentReadyState, setContentReadyState] = useState<IslandState | null>(null)
   const contentVisible = contentReadyState === state
+  const activities = useActivities(send)
+  const { handleModuleEvent: handleActivityModuleEvent } = activities
+  const glowColor =
+    state === 'compact' && activities.activity?.mode === 'pomodoro'
+      ? activities.activity.phase === 'focus'
+        ? 'rgba(248,113,113,0.3)'
+        : 'rgba(74,222,128,0.28)'
+      : GLOW_COLORS[state]
   const [battery, setBattery] = useState<{ percent: number | null; charging: boolean }>({
     percent: null,
     charging: false
@@ -35,10 +45,12 @@ export default function Island(): React.JSX.Element {
         setBattery(event.payload)
       } else if (event.type === 'ALERT') {
         send({ type: 'ALERT', payload: event.payload })
+      } else {
+        handleActivityModuleEvent(event)
       }
     }
     return window.island.onModuleEvent(handleModuleEvent)
-  }, [send])
+  }, [handleActivityModuleEvent, send])
 
   const handleMouseEnter = useCallback((): void => {
     window.island.setHover(true)
@@ -47,8 +59,8 @@ export default function Island(): React.JSX.Element {
 
   const handleMouseLeave = useCallback((): void => {
     window.island.setHover(false)
-    if (state === 'compact') send({ type: 'OUTSIDE' })
-  }, [state, send])
+    if (state === 'compact' && !activities.activity) send({ type: 'OUTSIDE' })
+  }, [activities.activity, state, send])
 
   const handleClick = useCallback((): void => {
     if (state === 'alert') {
@@ -69,7 +81,7 @@ export default function Island(): React.JSX.Element {
           width: size.width,
           height: size.height,
           borderRadius: size.borderRadius,
-          boxShadow: `0 4px 24px 0 ${GLOW_COLORS[state]}, 0 2px 8px rgba(0,0,0,0.6)`
+          boxShadow: `0 4px 24px 0 ${glowColor}, 0 2px 8px rgba(0,0,0,0.6)`
         }}
         transition={SPRING}
         onMouseEnter={handleMouseEnter}
@@ -93,21 +105,36 @@ export default function Island(): React.JSX.Element {
             transition={{ duration: 0.08 }}
           >
             {state === 'idle' && null}
-            {state === 'compact' && (
-              <span className="island-label">Mino</span>
-            )}
+            {state === 'compact' &&
+              (activities.activity ? (
+                <ActivityCompactWidget activity={activities.activity} config={activities.config} />
+              ) : (
+                <span className="island-label">Mino</span>
+              ))}
             {state === 'listening' && (
               <div className="island-listening">
                 <div className="island-listening-bars">
-                  <span /><span /><span /><span /><span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
                 </div>
                 <span className="island-label">Listening…</span>
               </div>
             )}
             {state === 'expanded' && (
-              <div className="island-expanded-content">
-                <ClockWidget />
-                <BatteryWidget percent={battery.percent} charging={battery.charging} />
+              <div className="island-expanded-content island-expanded-content--activities">
+                <div className="island-expanded-system-widgets">
+                  <ClockWidget />
+                  <BatteryWidget percent={battery.percent} charging={battery.charging} />
+                </div>
+                <ActivityWidgets
+                  activity={activities.activity}
+                  config={activities.config}
+                  completedRounds={activities.stats?.completedRounds ?? 0}
+                  sendCommand={activities.sendCommand}
+                />
               </div>
             )}
             {state === 'alert' && snapshot.context.alert && (
