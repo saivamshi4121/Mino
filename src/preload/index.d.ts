@@ -1,4 +1,4 @@
-import type { IslandModuleEvent, PomodoroConfig, PomodoroStats } from '../shared/moduleEvents'
+import type { IslandModuleEvent, PomodoroConfig, PomodoroStats, MediaCommand } from '../shared/moduleEvents'
 
 declare global {
   interface Window {
@@ -16,6 +16,9 @@ declare global {
         pause: () => Promise<void>
         skip: () => Promise<void>
         reset: () => Promise<void>
+      }
+      media: {
+        command: (cmd: MediaCommand) => Promise<void>
       }
       getPomodoroConfig: () => Promise<PomodoroConfig>
       getPomodoroStats: () => Promise<PomodoroStats>

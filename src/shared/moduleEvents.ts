@@ -26,6 +26,16 @@ export type ActivityCommand =
   | { type: 'pomodoro.skip' }
   | { type: 'pomodoro.reset' }
 
+export type MediaStatus = 'Playing' | 'Paused' | 'Stopped' | 'None'
+
+export interface MediaInfo {
+  title: string
+  artist: string
+  status: MediaStatus
+}
+
+export type MediaCommand = 'play' | 'pause' | 'next' | 'prev'
+
 export type IslandModuleEvent =
   | {
       type: 'battery.update'
@@ -33,6 +43,10 @@ export type IslandModuleEvent =
         percent: number | null
         charging: boolean
       }
+    }
+  | {
+      type: 'media.update'
+      payload: MediaInfo
     }
   | {
       type: 'ALERT'

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { IslandModuleEvent, PomodoroConfig, PomodoroStats } from '../shared/moduleEvents'
+import type { IslandModuleEvent, PomodoroConfig, PomodoroStats, MediaCommand } from '../shared/moduleEvents'
 
 const island = {
   /** Tell main process whether the mouse is over the pill */
@@ -32,6 +32,10 @@ const island = {
       ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.skip' }),
     reset: (): Promise<void> =>
       ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.reset' })
+  },
+  media: {
+    command: (cmd: MediaCommand): Promise<void> =>
+      ipcRenderer.invoke('island:media-command', cmd)
   },
   getPomodoroConfig: (): Promise<PomodoroConfig> => ipcRenderer.invoke('island:pomodoro:config'),
   getPomodoroStats: (): Promise<PomodoroStats> => ipcRenderer.invoke('island:pomodoro:stats:get'),

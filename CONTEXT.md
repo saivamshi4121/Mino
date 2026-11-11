@@ -34,4 +34,6 @@ Ctrl+Alt+Space), voice "open <app>" via Start Menu index + fuzzy match.
 
 ## Progress log (update at end of every milestone)
 - [x] M0: Scaffolded Mino (Electron + React + Vite + TS + XState + Framer Motion), verified running, preload exposes window.mino, NSIS dist script configured.
+- [x] M1-M4 complete; M4 adds timer/Pomodoro controls, phase alerts, a chime, and persisted daily focus-round counts.
+- [x] M5: Media controls — SMTC polling via PowerShell, media.update IPC event, MediaWidget (compact ticker + expanded now-playing+controls), purple glow for media state, DevPanel media simulation buttons.
 - [x] M1: Transparent frameless always-on-top window (640x300, y=8, screen-saver level), black pill 140x36, click-through with hover toggle via IPC, re-centres on display change.

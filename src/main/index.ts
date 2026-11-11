@@ -2,8 +2,9 @@ import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { loadModules, type ModuleEmitter } from './modules'
+import { sendMediaCommand } from './modules/media'
 import type { IslandModuleEvent } from '../shared/moduleEvents'
-import type { ActivityCommand } from '../shared/moduleEvents'
+import type { ActivityCommand, MediaCommand } from '../shared/moduleEvents'
 import defaultConfig from '../../config/default.json'
 import { getTodayPomodoroStats, recordPomodoroRound } from './modules/pomodoroStats'
 
@@ -117,6 +118,24 @@ app.whenReady().then(() => {
     }
     emitModuleEvent({ type: 'activity.command', payload: command })
   })
+
+  // Media SMTC commands
+  ipcMain.handle('island:media-command', (_event, cmd: unknown) => {
+    const VALID: MediaCommand[] = ['play', 'pause', 'next', 'prev']
+    if (typeof cmd !== 'string' || !VALID.includes(cmd as MediaCommand)) {
+      throw new TypeError('Invalid media command')
+    }
+    const action =
+      cmd === 'play'
+        ? ('Play' as const)
+        : cmd === 'pause'
+          ? ('Pause' as const)
+          : cmd === 'next'
+            ? ('SkipNext' as const)
+            : ('SkipPrevious' as const)
+    return sendMediaCommand(action)
+  })
+
   ipcMain.handle('island:pomodoro:config', () => defaultConfig.pomodoro)
   ipcMain.handle('island:pomodoro:stats:get', () => getTodayPomodoroStats())
   ipcMain.handle('island:pomodoro:stats:complete', async () => {

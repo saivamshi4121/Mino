@@ -1,5 +1,6 @@
 import type { IslandModuleEvent } from '../../shared/moduleEvents'
 import { batteryModule } from './battery'
+import { mediaModule } from './media'
 
 export type ModuleEmitter = (event: IslandModuleEvent) => void
 
@@ -11,7 +12,7 @@ export interface Module {
 }
 
 export function loadModules(emit: ModuleEmitter): () => void {
-  const modules = [batteryModule].sort((a, b) => a.priority - b.priority)
+  const modules = [batteryModule, mediaModule].sort((a, b) => a.priority - b.priority)
   const started: Module[] = []
 
   for (const module of modules) {

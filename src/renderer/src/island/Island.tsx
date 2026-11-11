@@ -2,10 +2,11 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMachine } from '@xstate/react'
 import { islandMachine, ISLAND_SIZES, type IslandState, type IslandEvent } from './islandMachine'
-import type { IslandModuleEvent } from '../../../shared/moduleEvents'
+import type { IslandModuleEvent, MediaInfo, MediaCommand } from '../../../shared/moduleEvents'
 import BatteryWidget from '../widgets/BatteryWidget'
 import ClockWidget from '../widgets/ClockWidget'
 import ActivityWidgets, { ActivityCompactWidget } from '../widgets/ActivityWidgets'
+import { MediaCompactWidget, MediaExpandedWidget } from '../widgets/MediaWidget'
 import { useActivities } from './useActivities'
 
 /** Spring config matching the spec: stiffness 300, damping 25 */
@@ -28,12 +29,23 @@ export default function Island(): React.JSX.Element {
   const contentVisible = contentReadyState === state
   const activities = useActivities(send)
   const { handleModuleEvent: handleActivityModuleEvent } = activities
+
+  // Media state — null when nothing is playing
+  const [media, setMedia] = useState<MediaInfo | null>(null)
+
+  // Priority: activity > media > idle
+  const hasActivity = !!activities.activity
+  const hasMedia = !!media
+
   const glowColor =
     state === 'compact' && activities.activity?.mode === 'pomodoro'
       ? activities.activity.phase === 'focus'
         ? 'rgba(248,113,113,0.3)'
         : 'rgba(74,222,128,0.28)'
-      : GLOW_COLORS[state]
+      : state === 'compact' && hasMedia && !hasActivity
+        ? 'rgba(167,139,250,0.28)' // purple-ish for media
+        : GLOW_COLORS[state]
+
   const [battery, setBattery] = useState<{ percent: number | null; charging: boolean }>({
     percent: null,
     charging: false
@@ -43,6 +55,21 @@ export default function Island(): React.JSX.Element {
     const handleModuleEvent = (event: IslandModuleEvent): void => {
       if (event.type === 'battery.update') {
         setBattery(event.payload)
+      } else if (event.type === 'media.update') {
+        const { title, artist, status } = event.payload
+        // Only show if something is actively playing or paused
+        if (status === 'Playing' || status === 'Paused') {
+          setMedia({ title, artist, status })
+          // Show compact pill when media starts playing and no activity is running
+          if (!hasActivity) {
+            send({ type: 'ACTIVITY_START' })
+          }
+        } else {
+          setMedia(null)
+          if (!hasActivity) {
+            send({ type: 'ACTIVITY_STOP' })
+          }
+        }
       } else if (event.type === 'ALERT') {
         send({ type: 'ALERT', payload: event.payload })
       } else {
@@ -50,7 +77,7 @@ export default function Island(): React.JSX.Element {
       }
     }
     return window.island.onModuleEvent(handleModuleEvent)
-  }, [handleActivityModuleEvent, send])
+  }, [handleActivityModuleEvent, hasActivity, send])
 
   const handleMouseEnter = useCallback((): void => {
     window.island.setHover(true)
@@ -59,8 +86,8 @@ export default function Island(): React.JSX.Element {
 
   const handleMouseLeave = useCallback((): void => {
     window.island.setHover(false)
-    if (state === 'compact' && !activities.activity) send({ type: 'OUTSIDE' })
-  }, [activities.activity, state, send])
+    if (state === 'compact' && !activities.activity && !media) send({ type: 'OUTSIDE' })
+  }, [activities.activity, media, state, send])
 
   const handleClick = useCallback((): void => {
     if (state === 'alert') {
@@ -71,6 +98,12 @@ export default function Island(): React.JSX.Element {
       send({ type: 'OUTSIDE' })
     }
   }, [state, send])
+
+  const sendMediaCommand = useCallback((cmd: MediaCommand): void => {
+    void window.island.media.command(cmd).catch((err: unknown) => {
+      console.error('[media] command failed', err)
+    })
+  }, [])
 
   return (
     <div className="island-container">
@@ -108,6 +141,8 @@ export default function Island(): React.JSX.Element {
             {state === 'compact' &&
               (activities.activity ? (
                 <ActivityCompactWidget activity={activities.activity} config={activities.config} />
+              ) : media ? (
+                <MediaCompactWidget media={media} />
               ) : (
                 <span className="island-label">Mino</span>
               ))}
@@ -129,6 +164,9 @@ export default function Island(): React.JSX.Element {
                   <ClockWidget />
                   <BatteryWidget percent={battery.percent} charging={battery.charging} />
                 </div>
+                {media && !activities.activity && (
+                  <MediaExpandedWidget media={media} onCommand={sendMediaCommand} />
+                )}
                 <ActivityWidgets
                   activity={activities.activity}
                   config={activities.config}
@@ -150,7 +188,7 @@ export default function Island(): React.JSX.Element {
       </motion.div>
 
       {/* Dev panel */}
-      <DevPanel send={send} currentState={state} />
+      <DevPanel send={send} currentState={state} onSimulateMedia={setMedia} />
     </div>
   )
 }
@@ -159,10 +197,12 @@ export default function Island(): React.JSX.Element {
 
 function DevPanel({
   send,
-  currentState
+  currentState,
+  onSimulateMedia
 }: {
   send: (event: IslandEvent) => void
   currentState: IslandState
+  onSimulateMedia: (media: MediaInfo | null) => void
 }): React.JSX.Element {
   const [visible, setVisible] = useState(false)
 
@@ -206,6 +246,30 @@ function DevPanel({
           ALERT (success)
         </button>
         <button onClick={() => send({ type: 'DISMISS' })}>DISMISS</button>
+        {/* Media simulation buttons */}
+        <button
+          onClick={() => {
+            onSimulateMedia({ title: 'Blinding Lights', artist: 'The Weeknd', status: 'Playing' })
+            send({ type: 'ACTIVITY_START' })
+          }}
+        >
+          MEDIA Playing
+        </button>
+        <button
+          onClick={() =>
+            onSimulateMedia({ title: 'Blinding Lights', artist: 'The Weeknd', status: 'Paused' })
+          }
+        >
+          MEDIA Paused
+        </button>
+        <button
+          onClick={() => {
+            onSimulateMedia(null)
+            send({ type: 'ACTIVITY_STOP' })
+          }}
+        >
+          MEDIA None
+        </button>
       </div>
     </div>
   )
