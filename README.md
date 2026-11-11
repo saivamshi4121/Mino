@@ -1,87 +1,167 @@
-# Dynamic Island
+# Dynamic Island for Windows
 
-Mino is a lightweight Windows island for glanceable activity and offline voice
-commands. It runs locally on Windows 10/11 and uses Vosk for on-device speech
-recognition.
+**Mino** is a personal productivity companion for Windows. It places a small,
+glossy island at the top of your screen to show useful activity at a glance and
+lets you control apps and everyday tasks with your voice. It is designed to run
+on your own laptop: speech recognition and the bundled voice model run locally,
+without a Mino account or cloud speech service.
 
-## Features
+> **Platform:** Windows 10/11, x64 · **Release:** 0.1.0
 
-- Media controls, timers, Pomodoro focus sessions, and a compact activity dock.
-- Ghost, glance, and summon presence modes with cursor-aware hiding.
-- Windows tray controls, configurable hotkey, microphone and wake word.
-- App launching, system status, and voice-controlled media and timers.
-- Offline speech recognition; no audio is uploaded to a Mino service.
+## What Mino can do
 
-## Screenshots
+- Show currently playing media, timers, and Pomodoro focus sessions in a
+  compact, glanceable dock.
+- Launch or close installed apps and control media, timers, focus sessions,
+  system volume, battery status, and web searches with voice commands.
+- Keep out of the way when you do not need it, while remaining available from
+  the system tray, wake word, or hotkey.
+- Adapt its position and visibility to your display, cursor, and foreground
+  app.
 
-Screenshots will be added before public release.
+## Special features
 
-## Install
+### Three presence levels
 
-Download `Dynamic-Island-0.1.0-setup.exe` for a per-user installation, or
-`Dynamic-Island-0.1.0-portable.zip` to extract and run without installing.
-The installer offers an optional start-with-Windows checkbox. The offline voice
-model is included; no model download or network connection is required for voice
-recognition.
+- **Ghost:** the default idle state. Mino shows only a subtle top-centre glow
+  and remains click-through.
+- **Glance:** activity such as media playback, a timer, Pomodoro, or microphone
+  use brings up a compact dock. Choose a left, centre, or right dock position;
+  drag it to reposition it.
+- **Summon:** temporarily expand the island when you activate voice with the
+  wake word or hotkey, or dwell at the top-centre screen edge. It collapses
+  after a period without interaction.
 
-## Voice commands
+### Shy island and app-aware display
 
-Enable the microphone and wake word in Settings, then say “Hey Mino” or “Hey
-Island”. Use the configured hotkey to start a voice command directly.
+When the pointer comes close to the compact dock, Mino shifts it away or
+shrinks it, then returns it when the pointer leaves. When configured, Mino
+hides over fullscreen apps and reduces to a dot while a supported browser is in
+the foreground.
 
-| Example | Action |
+### Offline voice
+
+Mino includes the Vosk English-Indian speech model. Speech recognition runs on
+the laptop and does not send microphone audio or transcripts to a Mino server.
+The first time you use the microphone, allow microphone access in Windows.
+
+## Install and use it on your laptop
+
+1. Download `Dynamic-Island-0.1.0-setup.exe` from the project's GitHub release.
+2. Run the installer. It installs for your Windows user and offers an optional
+   **Start Dynamic Island when I sign in** checkbox.
+3. Open **Dynamic Island** from the Start menu. The island appears at the top
+   of your screen; use its system-tray icon to open Settings, show or hide it,
+   toggle the microphone or wake word, or quit.
+4. In Settings, enable the microphone and wake word and review the configured
+   voice hotkey. You can also adjust the dock, monitor, Pomodoro durations,
+   launcher aliases, and other appearance options.
+5. Say **“Hey Mino”** or **“Hey Island”**, wait for the listening state, and
+   speak a command. Alternatively, press the configured hotkey to start a
+   command directly.
+
+The voice model is included in the installer; no download or internet
+connection is needed for speech recognition. Internet is only needed for
+commands that intentionally open a web search.
+
+### Portable version
+
+Download and extract `Dynamic-Island-0.1.0-portable.zip` to a folder you can
+write to, then run `dynamic-island.exe`. The portable version does not install
+Start menu shortcuts or add an autostart entry.
+
+## Voice command examples
+
+| Say something like | Mino will |
 | --- | --- |
 | “Open Notepad” | Find and launch an installed app |
 | “Close Notepad” | Close a running app |
-| “Play music” / “pause” / “next track” | Control media playback |
+| “Play music”, “pause”, or “next track” | Control media playback |
 | “Set a timer for five minutes” | Start a timer |
-| “Start focus” | Start a Pomodoro session |
+| “Start focus” | Start a Pomodoro focus session |
 | “How much battery?” | Read battery status |
 | “Set volume to 30 percent” | Change system volume |
-| “Search cats on YouTube” | Open a browser search |
+| “Search cats on YouTube” | Open a YouTube search in your browser |
 
-Voice recognition runs on-device. Search commands intentionally open Google or
-YouTube in the browser, which then handles the search request.
+Voice recognition is local. For a search command, the search phrase is sent to
+the search provider you requested when the browser opens the search page.
 
-## Configuration
+## Settings and local data
 
-Settings are stored at `%APPDATA%\dynamic-island\config.json`. Use the Settings
-window to change supported values.
+Settings are stored in:
 
-| Setting | Purpose |
+```text
+%APPDATA%\dynamic-island\config.json
+```
+
+The Settings window is the recommended way to change options. Available
+settings include:
+
+| Setting | What it controls |
 | --- | --- |
-| `voice.hotkey` | Voice activation shortcut |
-| `voice.wakeWordEnabled` | Enable or disable wake-word listening |
-| `voice.microphoneEnabled` | Enable or disable microphone access |
-| `pomodoro.focusMinutes` | Focus-session duration |
-| `pomodoro.breakMinutes` | Short-break duration |
-| `pomodoro.longBreakMinutes` | Long-break duration |
-| `launcher.aliases` | App-launcher aliases |
-| `display.mode` | `primary`, `chosen`, or `cursor` monitor |
-| `appearance.dock` | `left`, `center`, or `right` glance position |
-| `appearance.hideFullscreen` | Hide the island over fullscreen apps |
-| `appearance.browserDot` | Reduce the island to a dot over browsers |
-| `soundsEnabled` | Play subtle transition sounds |
+| Voice hotkey | Shortcut used to start a voice command |
+| Wake word | Enable or disable “Hey Mino” / “Hey Island” activation |
+| Microphone | Enable or disable microphone use |
+| Pomodoro durations | Focus, short-break, and long-break lengths |
+| Launcher aliases | Short names for apps in the app launcher |
+| Monitor | Follow the primary, selected, or cursor display |
+| Dock | Left, centre, or right glance position and saved placement |
+| Fullscreen behavior | Hide the island over fullscreen apps |
+| Browser behavior | Reduce the island to a dot over supported browsers |
+| Sounds | Enable or disable subtle transition sounds |
+| Start with Windows | Control automatic launch at sign-in |
+
+Application logs are written under:
+
+```text
+%APPDATA%\dynamic-island\logs
+```
 
 ## Build from source
 
-Requires Node.js 22 and npm on Windows.
+To run or build Mino from source, use a Windows x64 laptop with Git, Node.js
+22.x, and npm:
 
 ```powershell
+git clone <repository-url>
+cd mino
 npm ci
 npm run dev
-npm run build
+```
+
+Create a production build and Windows release packages with:
+
+```powershell
+npm run typecheck
+npm run lint
+npx vitest run
 npm run dist
 ```
 
-`npm run dist` creates the NSIS installer and portable ZIP in `dist/`. The Vosk
-model archive is bundled from `assets/models/runtime/` into the packaged app.
+The NSIS installer and portable ZIP are written to `dist/`. The packaged app
+includes the Vosk archive from `assets/models/runtime/`.
+
+## Technology stack
+
+- **Electron** hosts the Windows desktop application and provides the main
+  process, system tray, installer integration, and secure preload bridge.
+- **React and TypeScript** power the interface and typed application code.
+- **Vite / electron-vite** bundle the main process, preload, and renderer.
+- **Framer Motion** provides spring-based island animations.
+- **XState** manages the island's interaction and presentation states.
+- **Vosk Browser and WebAssembly** provide local speech recognition.
+- **Windows APIs and PowerShell integration** support desktop context and
+  system-level features.
 
 ## Privacy
 
-Microphone audio is processed locally by the bundled Vosk model. Mino does not
-send audio or transcripts to a Mino server. Internet searches are only sent to
-the selected search provider when you explicitly issue a search command.
+Microphone audio is processed on-device using the bundled Vosk model. Mino
+does not upload microphone audio or transcripts to a Mino service. No Mino
+account or cloud voice API is used. Web searches are sent to the requested
+provider only when you use a search command.
 
-See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for dependency licenses
-and [RELEASE.md](./RELEASE.md) for release validation steps.
+## Project documents
+
+- [MIT License](./LICENSE)
+- [Third-party notices](./THIRD_PARTY_NOTICES.md)
+- [Release checklist](./RELEASE.md)
