@@ -702,7 +702,13 @@ app
     ipcMain.on('island:drag', (event, phase: unknown, position?: unknown) => {
       if (event.sender !== mainWindow?.webContents || !mainWindow) return
       if (phase === 'start') {
-        if (presenceLevel !== 'glance' || foregroundMode !== 'normal' || shyActive) return
+        if (
+          (presenceLevel !== 'glance' && presenceLevel !== 'summon') ||
+          foregroundMode === 'hidden' ||
+          shyActive
+        ) {
+          return
+        }
         dragActive = true
         setIslandInteractive(true)
         return
@@ -723,11 +729,10 @@ app
           return
         }
         const { workArea } = getTargetDisplay()
-        const dockOffset = getDockOffset(getSettings().appearance.dock, WINDOW_WIDTH, 220)
         const x = Math.max(
           workArea.x,
           Math.min(
-            Math.round(dragPosition.screenX - dragPosition.offsetX - dockOffset),
+            Math.round(dragPosition.screenX - dragPosition.offsetX),
             workArea.x + workArea.width - WINDOW_WIDTH
           )
         )

@@ -15,6 +15,7 @@ import { MediaCompactWidget, MediaExpandedWidget } from '../widgets/MediaWidget'
 import { useActivities } from './useActivities'
 import { useVoice } from './useVoice'
 import type { PresenceLevel } from '../../../shared/settings'
+import { getDockOffset } from '../../../shared/presence'
 
 /** Spring config matching the spec: stiffness 300, damping 25 */
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25 }
@@ -291,13 +292,23 @@ export default function Island(): React.JSX.Element {
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>): void => {
-      if (requestedPresence !== 'glance' || visualPresence !== 'glance' || event.button !== 0) {
+      if (
+        (requestedPresence !== 'glance' && requestedPresence !== 'summon') ||
+        visualPresence !== requestedPresence ||
+        event.button !== 0
+      ) {
         return
       }
+      const pillBounds = event.currentTarget.getBoundingClientRect()
+      const hostWidth = event.currentTarget.parentElement?.clientWidth ?? pillBounds.width
+      const dockOffset =
+        requestedPresence === 'glance'
+          ? getDockOffset(dock, hostWidth, size.width)
+          : getDockOffset('center', hostWidth, size.width)
       dragStart.current = {
         pointerId: event.pointerId,
-        offsetX: event.nativeEvent.offsetX,
-        offsetY: event.nativeEvent.offsetY,
+        offsetX: event.clientX - pillBounds.left + dockOffset,
+        offsetY: event.clientY - pillBounds.top,
         screenX: event.screenX,
         screenY: event.screenY
       }
@@ -312,7 +323,7 @@ export default function Island(): React.JSX.Element {
         offsetY: dragStart.current.offsetY
       })
     },
-    [requestedPresence, visualPresence]
+    [dock, requestedPresence, size.width, visualPresence]
   )
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>): void => {

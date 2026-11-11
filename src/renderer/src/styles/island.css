@@ -620,7 +620,13 @@
   touch-action: none;
 }
 
-.island-presence--glance:active {
+.island-presence--summon {
+  cursor: grab;
+  touch-action: none;
+}
+
+.island-presence--glance:active,
+.island-presence--summon:active {
   cursor: grabbing;
 }
 

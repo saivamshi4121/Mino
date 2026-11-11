@@ -30,7 +30,8 @@ without a Mino account or cloud speech service.
   drag it to reposition it.
 - **Summon:** temporarily expand the island when you activate voice with the
   wake word or hotkey, or dwell at the top-centre screen edge. It collapses
-  after a period without interaction.
+  after a period without interaction. Drag the expanded island to reposition
+  it; Ghost remains click-through.
 
 ### Shy island and app-aware display
 
