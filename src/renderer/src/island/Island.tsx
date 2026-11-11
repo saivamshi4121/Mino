@@ -89,6 +89,18 @@ export default function Island(): React.JSX.Element {
     if (state === 'compact' && !activities.activity && !media) send({ type: 'OUTSIDE' })
   }, [activities.activity, media, state, send])
 
+  // Any pointer/key activity inside the expanded pill resets its auto-close timer
+  const handleExpandedActivity = useCallback((): void => {
+    if (state === 'expanded') send({ type: 'KEEP_OPEN' })
+  }, [state, send])
+
+  const handleExpandedContentClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>): void => {
+      event.stopPropagation()
+    },
+    []
+  )
+
   const handleClick = useCallback((): void => {
     if (state === 'alert') {
       send({ type: 'DISMISS' })
@@ -120,6 +132,9 @@ export default function Island(): React.JSX.Element {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        onMouseMove={handleExpandedActivity}
+        onPointerDown={handleExpandedActivity}
+        onKeyDown={handleExpandedActivity}
         onAnimationComplete={() => setContentReadyState(state)}
       >
         {/* Gloss overlay */}
@@ -159,7 +174,10 @@ export default function Island(): React.JSX.Element {
               </div>
             )}
             {state === 'expanded' && (
-              <div className="island-expanded-content island-expanded-content--activities">
+              <div
+                className="island-expanded-content island-expanded-content--activities"
+                onClick={handleExpandedContentClick}
+              >
                 <div className="island-expanded-system-widgets">
                   <ClockWidget />
                   <BatteryWidget percent={battery.percent} charging={battery.charging} />

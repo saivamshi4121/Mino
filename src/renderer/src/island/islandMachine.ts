@@ -27,6 +27,7 @@ export type IslandEvent =
   | { type: 'HOVER' }
   | { type: 'CLICK' }
   | { type: 'OUTSIDE' }
+  | { type: 'KEEP_OPEN' }
   | { type: 'LISTEN_START' }
   | { type: 'LISTEN_END' }
   | { type: 'ACTIVITY_START' }
@@ -40,7 +41,8 @@ export const islandMachine = setup({
     events: {} as IslandEvent
   },
   delays: {
-    IDLE_TIMEOUT: 4000
+    IDLE_TIMEOUT: 4000,
+    EXPANDED_TIMEOUT: 15000  // longer timeout while user is interacting
   }
 }).createMachine({
   id: 'island',
@@ -105,9 +107,11 @@ export const islandMachine = setup({
     },
     expanded: {
       after: {
-        IDLE_TIMEOUT: { target: 'idle' }
+        EXPANDED_TIMEOUT: { target: 'idle' }
       },
       on: {
+        // Any mouse/input activity inside the pill resets the auto-close timer
+        KEEP_OPEN: { target: 'expanded', reenter: true },
         OUTSIDE: [
           { guard: ({ context }) => context.activityActive, target: 'compact' },
           { target: 'idle' }
