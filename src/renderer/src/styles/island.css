@@ -9,7 +9,7 @@
   --island-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 
   /* State glow colours */
-  --glow-idle: rgba(255, 255, 255, 0.0);
+  --glow-idle: rgba(255, 255, 255, 0);
   --glow-compact: rgba(255, 255, 255, 0.08);
   --glow-listening: rgba(56, 189, 248, 0.35);
   --glow-expanded: rgba(255, 255, 255, 0.12);
@@ -76,7 +76,8 @@
 }
 
 @keyframes glint-sweep {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0%);
   }
   50% {
@@ -270,6 +271,38 @@
   color: var(--island-text-primary);
 }
 
+.launcher-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: var(--island-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.launcher-compact img,
+.launcher-compact-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.launcher-compact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--island-text-secondary);
+}
+
+.launcher-compact-check {
+  color: #86efac;
+  font-size: 14px;
+}
+
 .activity-compact--focus .activity-ring-progress {
   stroke: #f87171;
 }
@@ -387,7 +420,9 @@
   gap: 5px;
   min-width: 100px;
   color: var(--island-text-secondary);
-  transition: color 0.2s ease, filter 0.2s ease;
+  transition:
+    color 0.2s ease,
+    filter 0.2s ease;
 }
 
 .island-battery--charging {
@@ -434,11 +469,33 @@
 .island-listening {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  width: 100%;
+  gap: 9px;
+  overflow: hidden;
+}
+
+.island-mic-indicator {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+}
+
+.island-wake-word-indicator {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 2;
+  width: 6px;
+  height: 6px;
 }
 
 .island-listening-bars {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 3px;
   height: 24px;
@@ -447,20 +504,26 @@
 .island-listening-bars span {
   display: block;
   width: 3px;
+  height: 20px;
   background: rgba(56, 189, 248, 0.9);
   border-radius: 2px;
-  animation: bar-bounce 1s ease-in-out infinite;
+  transition: transform 80ms linear;
 }
 
-.island-listening-bars span:nth-child(1) { height: 8px; animation-delay: 0s; }
-.island-listening-bars span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
-.island-listening-bars span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
-.island-listening-bars span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
-.island-listening-bars span:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+.island-listening .island-label {
+  overflow: hidden;
+  max-width: 190px;
+  text-overflow: ellipsis;
+}
 
 @keyframes bar-bounce {
-  0%, 100% { transform: scaleY(0.4); }
-  50% { transform: scaleY(1); }
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 /* ── Alert content ── */
@@ -486,7 +549,8 @@
 }
 
 /* ── State-specific glow via class ── */
-.island-state--idle { }
+.island-state--idle {
+}
 
 .island-state--compact {
   border-top-color: rgba(255, 255, 255, 0.25);
@@ -531,8 +595,13 @@
 }
 
 @keyframes media-dot-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .media-compact-label {
@@ -606,7 +675,10 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--island-text-primary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
 }
 
 .media-btn svg {
@@ -663,6 +735,35 @@
   letter-spacing: 0.8px;
 }
 
+.dev-panel-launcher {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dev-panel-launcher input {
+  width: 220px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: 11px;
+}
+
+.dev-panel-launcher button {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
 .dev-panel-buttons {
   display: flex;
   gap: 6px;
@@ -678,7 +779,9 @@
   font-size: 11px;
   font-family: 'Segoe UI', monospace;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .dev-panel-buttons button:hover {

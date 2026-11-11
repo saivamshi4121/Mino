@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { IslandModuleEvent, PomodoroConfig, PomodoroStats, MediaCommand } from '../shared/moduleEvents'
+import type {
+  IslandModuleEvent,
+  PomodoroConfig,
+  PomodoroStats,
+  MediaCommand,
+  LauncherCommandResult,
+  VoiceCommandResult
+} from '../shared/moduleEvents'
 
 const island = {
   /** Tell main process whether the mouse is over the pill */
@@ -34,8 +41,19 @@ const island = {
       ipcRenderer.invoke('island:activity-command', { type: 'pomodoro.reset' })
   },
   media: {
-    command: (cmd: MediaCommand): Promise<void> =>
-      ipcRenderer.invoke('island:media-command', cmd)
+    command: (cmd: MediaCommand): Promise<void> => ipcRenderer.invoke('island:media-command', cmd)
+  },
+  voice: {
+    isModelAvailable: (): Promise<boolean> => ipcRenderer.invoke('island:voice:model-available'),
+    getConfig: (): Promise<{ wakeWordEnabled: boolean }> =>
+      ipcRenderer.invoke('island:voice:config'),
+    runCommand: (command: string): Promise<VoiceCommandResult> =>
+      ipcRenderer.invoke('island:voice:run-command', command)
+  },
+  launcher: {
+    run: (command: string): Promise<LauncherCommandResult> =>
+      ipcRenderer.invoke('island:launcher:run', command),
+    refresh: (): Promise<void> => ipcRenderer.invoke('island:launcher:refresh')
   },
   getPomodoroConfig: (): Promise<PomodoroConfig> => ipcRenderer.invoke('island:pomodoro:config'),
   getPomodoroStats: (): Promise<PomodoroStats> => ipcRenderer.invoke('island:pomodoro:stats:get'),

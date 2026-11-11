@@ -5,7 +5,7 @@
     <title>Mino</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' file:; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     />
     <style>
       /* Ensure transparency for the frameless window */

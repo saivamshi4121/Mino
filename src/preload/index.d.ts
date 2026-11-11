@@ -1,4 +1,11 @@
-import type { IslandModuleEvent, PomodoroConfig, PomodoroStats, MediaCommand } from '../shared/moduleEvents'
+import type {
+  IslandModuleEvent,
+  PomodoroConfig,
+  PomodoroStats,
+  MediaCommand,
+  LauncherCommandResult,
+  VoiceCommandResult
+} from '../shared/moduleEvents'
 
 declare global {
   interface Window {
@@ -19,6 +26,15 @@ declare global {
       }
       media: {
         command: (cmd: MediaCommand) => Promise<void>
+      }
+      voice: {
+        isModelAvailable: () => Promise<boolean>
+        getConfig: () => Promise<{ wakeWordEnabled: boolean }>
+        runCommand: (command: string) => Promise<VoiceCommandResult>
+      }
+      launcher: {
+        run: (command: string) => Promise<LauncherCommandResult>
+        refresh: () => Promise<void>
       }
       getPomodoroConfig: () => Promise<PomodoroConfig>
       getPomodoroStats: () => Promise<PomodoroStats>

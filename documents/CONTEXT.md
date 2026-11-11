@@ -68,7 +68,7 @@ Pomodoro focus mode, listening state, offline voice (wake word "hey island" + ho
 Ctrl+Alt+Space), voice "open <app>" via Start Menu index + fuzzy match.
 
 ## Progress log (update at end of every milestone)
-- [x] M0-M4 complete; M4 adds timer/Pomodoro controls, phase alerts, a chime, and persisted daily focus-round counts.
+- [x] M0-M8 complete; M8 adds offline wake-word recognition and voice commands for apps, media, timers, Pomodoro, battery, system volume, and web search.
 ```
 
 **Tip:** At the end of each milestone, tell the agent: *"Update the Progress log in CONTEXT.md in one line."* This is your memory across sessions.
@@ -293,7 +293,7 @@ Commit: `M7`.
 **Prompt**
 ```
 Read CONTEXT.md first.
-Task M8: Always-on wake word "hey island" (offline) and full voice command set.
+Task M8: Always-on wake word "hey Mino" (offline) and full voice command set.
 Wake word:
 - Run a second lightweight Vosk recogniser restricted with a grammar ["hey island","[unk]"] on the mic stream. Low CPU. On detection -> same flow as hotkey (LISTEN_START) with a short "ding" sound.
 - Debounce so it does not retrigger for 2 s; ignore while already listening.
@@ -311,7 +311,7 @@ Add a unit-test file for the parser with 25 sample phrases. 2-line summary.
 ```
 
 **Done when**
-- [ ] Say "Hey Island" then "open VS Code and Spotify" and both open
+- [ ] Say "Hey Mino" then "open VS Code and Spotify" and both open
 - [ ] "Hey Island, start focus" begins Pomodoro
 - [ ] Idle CPU stays low (< 3-5%) with wake word on
 - [ ] Parser tests pass

@@ -6,6 +6,7 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    publicDir: resolve('assets/models/runtime'),
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')

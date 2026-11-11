@@ -3,6 +3,31 @@ import { describe, expect, it } from 'vitest'
 import { islandMachine } from './islandMachine'
 
 describe('island activity priority', () => {
+  it('enters listening and returns to idle when voice capture ends', () => {
+    const actor = createActor(islandMachine)
+    actor.start()
+
+    actor.send({ type: 'LISTEN_START' })
+    expect(actor.getSnapshot().value).toBe('listening')
+
+    actor.send({ type: 'LISTEN_END' })
+    expect(actor.getSnapshot().value).toBe('idle')
+
+    actor.stop()
+  })
+
+  it('returns to an active compact activity after voice capture', () => {
+    const actor = createActor(islandMachine)
+    actor.start()
+
+    actor.send({ type: 'ACTIVITY_START' })
+    actor.send({ type: 'LISTEN_START' })
+    actor.send({ type: 'LISTEN_END' })
+    expect(actor.getSnapshot().value).toBe('compact')
+
+    actor.stop()
+  })
+
   it('keeps an active countdown compact past the idle timeout', () => {
     const clock = new SimulatedClock()
     const actor = createActor(islandMachine, { clock })

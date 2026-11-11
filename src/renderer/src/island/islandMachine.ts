@@ -42,7 +42,7 @@ export const islandMachine = setup({
   },
   delays: {
     IDLE_TIMEOUT: 4000,
-    EXPANDED_TIMEOUT: 15000  // longer timeout while user is interacting
+    EXPANDED_TIMEOUT: 15000 // longer timeout while user is interacting
   }
 }).createMachine({
   id: 'island',
@@ -95,7 +95,12 @@ export const islandMachine = setup({
     },
     listening: {
       on: {
-        LISTEN_END: { target: 'idle' },
+        LISTEN_END: [
+          { guard: ({ context }) => context.previousState === 'compact', target: 'compact' },
+          { guard: ({ context }) => context.previousState === 'expanded', target: 'expanded' },
+          { guard: ({ context }) => context.previousState === 'alert', target: 'alert' },
+          { target: 'idle' }
+        ],
         ALERT: {
           target: 'alert',
           actions: assign({
@@ -143,6 +148,7 @@ export const islandMachine = setup({
         ]
       },
       on: {
+        LISTEN_START: { target: 'listening', actions: assign({ previousState: 'alert' }) },
         ACTIVITY_START: {
           actions: assign({ previousState: 'compact', activityActive: true })
         },

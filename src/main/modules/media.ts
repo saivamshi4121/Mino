@@ -95,13 +95,16 @@ export async function sendMediaCommand(
   action: 'Play' | 'Pause' | 'SkipNext' | 'SkipPrevious'
 ): Promise<void> {
   const script = buildControlScript(action)
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], {
       stdio: 'ignore',
       windowsHide: true
     })
-    ps.on('close', () => resolve())
-    ps.on('error', () => resolve())
+    ps.on('error', reject)
+    ps.on('close', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`Media command exited with code ${code ?? 'unknown'}`))
+    })
   })
 }
 

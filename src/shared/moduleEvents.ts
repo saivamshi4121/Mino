@@ -36,6 +36,36 @@ export interface MediaInfo {
 
 export type MediaCommand = 'play' | 'pause' | 'next' | 'prev'
 
+export interface LauncherResult {
+  ok: boolean
+  matched: string | null
+  reason: string | null
+}
+
+export interface LauncherOperationResult extends LauncherResult {
+  action: 'open' | 'close'
+}
+
+export interface LauncherCommandResult {
+  ok: boolean
+  reason: string | null
+  results: LauncherOperationResult[]
+}
+
+export interface LauncherStatus {
+  phase: 'opening' | 'opened' | 'closing' | 'closed' | 'failed'
+  name: string
+  iconDataUrl?: string
+  message?: string
+}
+
+export interface VoiceCommandResult {
+  ok: boolean
+  title: string
+  message?: string
+  type: 'info' | 'success' | 'error'
+}
+
 export type IslandModuleEvent =
   | {
       type: 'battery.update'
@@ -59,4 +89,11 @@ export type IslandModuleEvent =
   | {
       type: 'pomodoro.stats'
       payload: PomodoroStats
+    }
+  | {
+      type: 'launcher.status'
+      payload: LauncherStatus
+    }
+  | {
+      type: 'voice.listen'
     }

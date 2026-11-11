@@ -4,5 +4,15 @@
     "breakMinutes": 5,
     "longBreakMinutes": 15,
     "roundsUntilLongBreak": 4
+  },
+  "launcher": {
+    "aliases": {
+      "code": "Visual Studio Code",
+      "browser": "Google Chrome"
+    }
+  },
+  "voice": {
+    "hotkey": "Control+Alt+Space",
+    "wakeWordEnabled": true
   }
 }
