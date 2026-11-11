@@ -6,7 +6,7 @@ lets you control apps and everyday tasks with your voice. It is designed to run
 on your own laptop: speech recognition and the bundled voice model run locally,
 without a Mino account or cloud speech service.
 
-> **Platform:** Windows 10/11, x64 · **Release:** 0.1.0
+> **Platform:** Windows 10/11, x64 · **Latest release:** 0.1.5
 
 ## What Mino can do
 
@@ -47,7 +47,7 @@ The first time you use the microphone, allow microphone access in Windows.
 
 ## Install and use it on your laptop
 
-1. Download `Dynamic-Island-0.1.0-setup.exe` from the project's GitHub release.
+1. Download `Dynamic-Island-0.1.5-setup.exe` from the project's GitHub release.
 2. Run the installer. It installs for your Windows user and offers an optional
    **Start Dynamic Island when I sign in** checkbox.
 3. Open **Dynamic Island** from the Start menu. The island appears at the top
@@ -66,7 +66,7 @@ commands that intentionally open a web search.
 
 ### Portable version
 
-Download and extract `Dynamic-Island-0.1.0-portable.zip` to a folder you can
+Download and extract `Dynamic-Island-0.1.5-portable.zip` to a folder you can
 write to, then run `dynamic-island.exe`. The portable version does not install
 Start menu shortcuts or add an autostart entry.
 
@@ -116,6 +116,9 @@ Application logs are written under:
 ```text
 %APPDATA%\dynamic-island\logs
 ```
+
+If voice activation fails, check that microphone access is allowed for desktop
+apps in Windows Privacy settings, then review `mino.log` in the logs folder.
 
 ## Build from source
 

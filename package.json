@@ -1,6 +1,6 @@
 {
   "name": "mino",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "A lightweight Windows dynamic island with offline voice control",
   "main": "./out/main/index.js",
   "author": "Mino contributors",

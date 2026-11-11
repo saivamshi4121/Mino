@@ -36,7 +36,8 @@ declare global {
       }
       voice: {
         isModelAvailable: () => Promise<boolean>
-        getModelUrl: () => Promise<string>
+        getModelData: () => Promise<Uint8Array>
+        reportError: (message: string) => void
         getConfig: () => Promise<{ wakeWordEnabled: boolean; microphoneEnabled: boolean }>
         runCommand: (command: string) => Promise<VoiceCommandResult>
       }

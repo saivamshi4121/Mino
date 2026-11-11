@@ -270,12 +270,19 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
           const available = await window.island.voice.isModelAvailable()
           if (!available) {
             throw new Error(
-              `Vosk model not found. Extract the small English model to assets/models and create ${MODEL_URL}`
+              import.meta.env.PROD
+                ? 'The bundled Vosk model is missing. Reinstall Mino.'
+                : `Vosk model not found. Check assets/models/runtime/${MODEL_URL}.`
             )
           }
-          const configuredModelUrl = await window.island.voice.getModelUrl()
-          const modelUrl = new URL(configuredModelUrl, window.location.href).toString()
-          modelPromiseRef.current = loadVoskModel(modelUrl)
+          const modelData = await window.island.voice.getModelData()
+          const modelArchive = new Uint8Array(modelData)
+          const modelUrl = URL.createObjectURL(
+            new Blob([modelArchive.buffer], { type: 'application/gzip' })
+          )
+          modelPromiseRef.current = loadVoskModel(modelUrl).finally(() =>
+            URL.revokeObjectURL(modelUrl)
+          )
         }
         try {
           const model = await modelPromiseRef.current
@@ -461,11 +468,12 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
           : error
             ? String(error)
             : 'The speech model could not be loaded'
+      window.island.voice.reportError(message)
       send({
         type: 'ALERT',
         payload: {
           title: 'Voice unavailable',
-          message: `${message}. Check microphone access and the Vosk model at assets/models/${MODEL_URL}.`,
+          message: `${message}. Check Windows microphone permissions. If it persists, see %APPDATA%\\dynamic-island\\logs\\mino.log.`,
           type: 'error'
         }
       })

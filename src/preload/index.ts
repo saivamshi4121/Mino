@@ -65,7 +65,8 @@ const island = {
   },
   voice: {
     isModelAvailable: (): Promise<boolean> => ipcRenderer.invoke('island:voice:model-available'),
-    getModelUrl: (): Promise<string> => ipcRenderer.invoke('island:voice:model-url'),
+    getModelData: (): Promise<Uint8Array> => ipcRenderer.invoke('island:voice:model-data'),
+    reportError: (message: string): void => ipcRenderer.send('island:voice:log-error', message),
     getConfig: (): Promise<{ wakeWordEnabled: boolean; microphoneEnabled: boolean }> =>
       ipcRenderer.invoke('island:voice:config'),
     runCommand: (command: string): Promise<VoiceCommandResult> =>

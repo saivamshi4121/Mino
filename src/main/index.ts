@@ -5,7 +5,6 @@ import {
   ipcMain,
   Menu,
   nativeImage,
-  protocol,
   screen,
   session,
   Tray
@@ -93,13 +92,6 @@ if ($process) { "$($process.ProcessName)|$fullscreen" }
 `
 const FOREGROUND_COMMAND = Buffer.from(FOREGROUND_SCRIPT, 'utf16le').toString('base64')
 
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'mino-model',
-    privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true }
-  }
-])
-
 let mainWindow: BrowserWindow | null = null
 let settingsWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -123,7 +115,7 @@ app.setPath('userData', join(app.getPath('appData'), 'dynamic-island'))
 
 const crashLogPath = join(app.getPath('userData'), 'logs', 'mino.log')
 
-function logCrash(message: string, error?: unknown): void {
+function writeAppLog(message: string, error?: unknown): void {
   const detail =
     error instanceof Error
       ? `${error.name}: ${error.message}\n${error.stack ?? ''}`
@@ -144,10 +136,10 @@ function logCrash(message: string, error?: unknown): void {
 }
 
 process.on('uncaughtExceptionMonitor', (error, origin) => {
-  logCrash(`Uncaught exception (${origin})`, error)
+  writeAppLog(`Uncaught exception (${origin})`, error)
 })
 process.on('unhandledRejection', (reason) => {
-  logCrash('Unhandled promise rejection', reason)
+  writeAppLog('Unhandled promise rejection', reason)
   throw reason
 })
 
@@ -155,28 +147,6 @@ function getVoskModelPath(): string {
   return app.isPackaged
     ? join(process.resourcesPath, 'models', VOSK_MODEL_FILE)
     : join(app.getAppPath(), 'assets', 'models', 'runtime', VOSK_MODEL_FILE)
-}
-
-async function registerVoskModelProtocol(): Promise<void> {
-  await protocol.handle('mino-model', async (request) => {
-    const url = new URL(request.url)
-    if (url.hostname !== 'model' || url.pathname !== `/${VOSK_MODEL_FILE}`) {
-      return new Response('Not found', { status: 404 })
-    }
-
-    try {
-      const model = readFileSync(getVoskModelPath())
-      return new Response(model, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/gzip'
-        }
-      })
-    } catch (error) {
-      logCrash('Could not serve the bundled Vosk model', error)
-      return new Response('Vosk model unavailable', { status: 500 })
-    }
-  })
 }
 
 if (!hasSingleInstanceLock) {
@@ -473,7 +443,7 @@ function createWindow(): void {
   mainWindow.on('hide', updateTrayMenu)
   mainWindow.on('move', schedulePositionSave)
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
-    logCrash(`Renderer process exited (${details.reason}, code ${details.exitCode})`)
+    writeAppLog(`Renderer process exited (${details.reason}, code ${details.exitCode})`)
   })
 
   // Keep on top at screen-saver level
@@ -693,7 +663,6 @@ async function applySettings(value: unknown): Promise<MinoSettings> {
 app
   .whenReady()
   .then(async () => {
-    await registerVoskModelProtocol()
     if (!hasSingleInstanceLock) return
     electronApp.setAppUserModelId('com.mino')
     loadSettings()
@@ -823,9 +792,21 @@ app
     ipcMain.handle('island:voice:model-available', () => {
       return existsSync(getVoskModelPath())
     })
-    ipcMain.handle('island:voice:model-url', () =>
-      app.isPackaged ? `mino-model://model/${VOSK_MODEL_FILE}` : VOSK_MODEL_FILE
-    )
+    ipcMain.handle('island:voice:model-data', (event) => {
+      if (event.sender !== mainWindow?.webContents) {
+        throw new Error('Voice model data is only available to the island window')
+      }
+      try {
+        return Uint8Array.from(readFileSync(getVoskModelPath()))
+      } catch (error) {
+        writeAppLog('Could not load the bundled Vosk model archive', error)
+        throw error
+      }
+    })
+    ipcMain.on('island:voice:log-error', (event, message: unknown) => {
+      if (event.sender !== mainWindow?.webContents || typeof message !== 'string') return
+      writeAppLog('Voice initialization failed', message.slice(0, 2000))
+    })
 
     ipcMain.handle('island:pomodoro:config', () => getSettings().pomodoro)
     ipcMain.handle('island:pomodoro:stats:get', () => getTodayPomodoroStats())
@@ -868,12 +849,12 @@ app
     screen.on('display-removed', recentreWindow)
   })
   .catch((error: unknown) => {
-    logCrash('Application startup failed', error)
+    writeAppLog('Application startup failed', error)
     app.quit()
   })
 
 app.on('child-process-gone', (_event, details) => {
-  logCrash(`Child process exited (${details.type}: ${details.reason}, code ${details.exitCode})`)
+  writeAppLog(`Child process exited (${details.type}: ${details.reason}, code ${details.exitCode})`)
 })
 
 app.on('before-quit', () => {
