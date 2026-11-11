@@ -8,13 +8,18 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: transparent;
   user-select: none;
-  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 #root {
@@ -27,4 +32,12 @@ html, body {
   display: flex;
   justify-content: center;
   padding-top: 0;
+}
+
+.island-container.island-dock--left {
+  justify-content: flex-start;
+}
+
+.island-container.island-dock--right {
+  justify-content: flex-end;
 }

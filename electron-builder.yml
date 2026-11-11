@@ -1,27 +1,40 @@
-appId: com.electron.app
-productName: mino
+appId: com.mino
+productName: Dynamic Island
 directories:
   buildResources: build
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  - '!out/renderer/vosk-model-small-en-in-0.4.tar.gz'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+extraResources:
+  - from: assets/models/runtime/vosk-model-small-en-in-0.4.tar.gz
+    to: models/vosk-model-small-en-in-0.4.tar.gz
 win:
-  executableName: mino
+  executableName: dynamic-island
+  artifactName: Dynamic-Island-${version}-portable.${ext}
   target:
     - target: nsis
       arch:
         - x64
+    - target: zip
+      arch:
+        - x64
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: Dynamic-Island-${version}-setup.${ext}
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  include: build/installer.nsh
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  createStartMenuShortcut: true
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
@@ -42,6 +55,3 @@ linux:
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates

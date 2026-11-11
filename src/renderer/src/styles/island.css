@@ -75,6 +75,16 @@
   opacity: 0.6;
 }
 
+.island-state--idle .island-glint {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-glint {
+    animation: none;
+  }
+}
+
 @keyframes glint-sweep {
   0%,
   100% {
@@ -468,10 +478,11 @@
 /* ── Listening state ── */
 .island-listening {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  gap: 9px;
+  gap: 13px;
   overflow: hidden;
 }
 
@@ -566,6 +577,51 @@
 
 .island-state--alert {
   border-top-color: rgba(251, 146, 60, 0.4);
+}
+
+.island-presence--ghost {
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.76), transparent);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.32);
+  pointer-events: none;
+}
+
+.island-presence--ghost .island-gloss {
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.1));
+}
+
+.island-presence--ghost .island-glint,
+.island-presence--ghost .island-content,
+.island-presence--shy .island-content,
+.island-presence--dot .island-content,
+.island-presence--shy .island-glint,
+.island-presence--dot .island-glint,
+.island-presence--shy .island-gloss,
+.island-presence--dot .island-gloss {
+  display: none;
+}
+
+.island-presence--shy,
+.island-presence--dot {
+  border: 0;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.92),
+    rgba(255, 255, 255, 0.2) 65%,
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.48);
+  pointer-events: none;
+}
+
+.island-presence--glance {
+  cursor: grab;
+  touch-action: none;
+}
+
+.island-presence--glance:active {
+  cursor: grabbing;
 }
 
 /* ── Media Widget ── */
@@ -787,4 +843,54 @@
 .dev-panel-buttons button:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.3);
+}
+.island-onboarding {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  text-align: left;
+}
+
+.island-onboarding-eyebrow {
+  margin-bottom: 4px;
+  color: rgba(188, 177, 255, 0.9);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.island-onboarding h2 {
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.island-onboarding p,
+.island-onboarding li {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.island-onboarding ul {
+  display: flex;
+  gap: 11px;
+  margin-top: 7px;
+}
+
+.island-onboarding button {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  color: #141319;
+  background: #e8e7ef;
+  border: 0;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
 }

@@ -6,11 +6,18 @@ import type {
   LauncherCommandResult,
   VoiceCommandResult
 } from '../shared/moduleEvents'
+import type { DisplayOption, MinoSettings, PresenceLevel } from '../shared/settings'
+import type { DragPosition, PresenceEvent } from '../shared/presence'
 
 declare global {
   interface Window {
     island: {
       setHover: (hovering: boolean) => void
+      presence: {
+        setLevel: (level: PresenceLevel) => void
+        onEvent: (callback: (event: PresenceEvent) => void) => () => void
+        drag: (phase: 'start' | 'move' | 'end', position?: DragPosition) => void
+      }
       onModuleEvent: (callback: (event: IslandModuleEvent) => void) => () => void
       timer: {
         start: (minutes: number) => Promise<void>
@@ -29,7 +36,8 @@ declare global {
       }
       voice: {
         isModelAvailable: () => Promise<boolean>
-        getConfig: () => Promise<{ wakeWordEnabled: boolean }>
+        getModelUrl: () => Promise<string>
+        getConfig: () => Promise<{ wakeWordEnabled: boolean; microphoneEnabled: boolean }>
         runCommand: (command: string) => Promise<VoiceCommandResult>
       }
       launcher: {
@@ -39,6 +47,15 @@ declare global {
       getPomodoroConfig: () => Promise<PomodoroConfig>
       getPomodoroStats: () => Promise<PomodoroStats>
       recordPomodoroRound: () => Promise<PomodoroStats>
+      settings: {
+        get: () => Promise<MinoSettings>
+        getDisplays: () => Promise<DisplayOption[]>
+        save: (settings: MinoSettings) => Promise<MinoSettings>
+        completeOnboarding: () => Promise<MinoSettings>
+        getStartup: () => Promise<boolean>
+        setStartup: (enabled: boolean) => Promise<boolean>
+        open: () => Promise<void>
+      }
     }
   }
 }

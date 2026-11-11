@@ -14,6 +14,7 @@ import ActivityWidgets, { ActivityCompactWidget } from '../widgets/ActivityWidge
 import { MediaCompactWidget, MediaExpandedWidget } from '../widgets/MediaWidget'
 import { useActivities } from './useActivities'
 import { useVoice } from './useVoice'
+import type { PresenceLevel } from '../../../shared/settings'
 
 /** Spring config matching the spec: stiffness 300, damping 25 */
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 25 }
@@ -31,12 +32,114 @@ export default function Island(): React.JSX.Element {
   const [snapshot, send] = useMachine(islandMachine)
   const state = snapshot.value as IslandState
   const [devPanelVisible, setDevPanelVisible] = useState(false)
-  const size = ISLAND_SIZES[state]
+  const [onboardingVisible, setOnboardingVisible] = useState(false)
+  const [soundsEnabled, setSoundsEnabled] = useState(false)
+  const [voiceHotkeyLabel, setVoiceHotkeyLabel] = useState('Ctrl + Alt + Space')
+  const [dock, setDock] = useState<'left' | 'center' | 'right'>('center')
+  const [shy, setShy] = useState(false)
+  const [browserDot, setBrowserDot] = useState(false)
+  const [fullscreenHidden, setFullscreenHidden] = useState(false)
+  const dragStart = useRef<{
+    pointerId: number
+    offsetX: number
+    offsetY: number
+    screenX: number
+    screenY: number
+  } | null>(null)
+  const draggedRef = useRef(false)
   const [contentReadyState, setContentReadyState] = useState<IslandState | null>(null)
   const contentVisible = contentReadyState === state
   const activities = useActivities(send)
   const voice = useVoice(send)
   const { handleModuleEvent: handleActivityModuleEvent } = activities
+  const requestedPresence: PresenceLevel =
+    state === 'expanded' || state === 'listening' || state === 'alert' || onboardingVisible
+      ? 'summon'
+      : state === 'compact' || voice.wakeWordActive
+        ? 'glance'
+        : 'ghost'
+  const visualPresence =
+    shy && requestedPresence !== 'summon'
+      ? 'shy'
+      : browserDot && requestedPresence !== 'summon'
+        ? 'dot'
+        : requestedPresence
+  const size =
+    visualPresence === 'ghost'
+      ? { width: 140, height: 2, borderRadius: 2 }
+      : visualPresence === 'shy' || visualPresence === 'dot'
+        ? { width: 12, height: 12, borderRadius: 6 }
+        : requestedPresence === 'glance'
+          ? { width: 220, height: 38, borderRadius: 19 }
+          : ISLAND_SIZES[state]
+
+  useEffect(() => {
+    let active = true
+    void window.island.settings
+      .get()
+      .then((settings) => {
+        if (!active) return
+        setSoundsEnabled(settings.soundsEnabled)
+        setDock(settings.appearance.dock)
+        setVoiceHotkeyLabel(settings.voice.hotkey.replace('Control', 'Ctrl').replace(/\+/g, ' + '))
+        if (!settings.onboardingComplete) {
+          setOnboardingVisible(true)
+          send({ type: 'CLICK' })
+        }
+      })
+      .catch((error: unknown) => console.error('[settings] Could not load island settings', error))
+    return () => {
+      active = false
+    }
+  }, [send])
+
+  useEffect(() => {
+    window.island.presence.setLevel(requestedPresence)
+  }, [requestedPresence])
+
+  useEffect(
+    () =>
+      window.island.presence.onEvent((event) => {
+        if (event.type === 'shy') {
+          setShy(event.active)
+        } else if (event.type === 'summon') {
+          send({ type: 'SUMMON' })
+        } else if (event.type === 'foreground') {
+          setFullscreenHidden(event.mode === 'hidden')
+          setBrowserDot(event.mode === 'browser')
+        }
+      }),
+    [send]
+  )
+
+  const previousState = useRef(state)
+  useEffect(() => {
+    const previous = previousState.current
+    previousState.current = state
+    if (!soundsEnabled || previous === state) return
+    if (
+      (previous === 'expanded' && (state === 'idle' || state === 'compact')) ||
+      (state === 'expanded' && (previous === 'idle' || previous === 'compact'))
+    ) {
+      try {
+        const audio = new AudioContext()
+        const oscillator = audio.createOscillator()
+        const gain = audio.createGain()
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(state === 'expanded' ? 520 : 390, audio.currentTime)
+        gain.gain.setValueAtTime(0.0001, audio.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.025, audio.currentTime + 0.012)
+        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.11)
+        oscillator.connect(gain)
+        gain.connect(audio.destination)
+        oscillator.start()
+        oscillator.stop(audio.currentTime + 0.12)
+        oscillator.onended = () => void audio.close()
+      } catch (error) {
+        console.error('[sounds] Could not play island transition sound', error)
+      }
+    }
+  }, [soundsEnabled, state])
 
   useEffect(() => {
     window.island.setHover(devPanelVisible)
@@ -127,6 +230,13 @@ export default function Island(): React.JSX.Element {
             status.phase === 'failed' ? 4200 : 1400
           )
         }
+      } else if (event.type === 'settings.updated') {
+        setSoundsEnabled(event.payload.soundsEnabled)
+        setOnboardingVisible(!event.payload.onboardingComplete)
+        setDock(event.payload.appearance.dock)
+        setVoiceHotkeyLabel(
+          event.payload.voice.hotkey.replace('Control', 'Ctrl').replace(/\+/g, ' + ')
+        )
       } else {
         handleActivityModuleEvent(event)
       }
@@ -166,6 +276,10 @@ export default function Island(): React.JSX.Element {
   )
 
   const handleClick = useCallback((): void => {
+    if (draggedRef.current) {
+      draggedRef.current = false
+      return
+    }
     if (state === 'alert') {
       send({ type: 'DISMISS' })
     } else if (state !== 'expanded') {
@@ -174,6 +288,52 @@ export default function Island(): React.JSX.Element {
       send({ type: 'OUTSIDE' })
     }
   }, [state, send])
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>): void => {
+      if (requestedPresence !== 'glance' || visualPresence !== 'glance' || event.button !== 0) {
+        return
+      }
+      dragStart.current = {
+        pointerId: event.pointerId,
+        offsetX: event.nativeEvent.offsetX,
+        offsetY: event.nativeEvent.offsetY,
+        screenX: event.screenX,
+        screenY: event.screenY
+      }
+      draggedRef.current = false
+      event.currentTarget.setPointerCapture(event.pointerId)
+      event.preventDefault()
+      window.island.presence.drag('start')
+      window.island.presence.drag('move', {
+        screenX: event.screenX,
+        screenY: event.screenY,
+        offsetX: dragStart.current.offsetX,
+        offsetY: dragStart.current.offsetY
+      })
+    },
+    [requestedPresence, visualPresence]
+  )
+
+  const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    const drag = dragStart.current
+    if (drag?.pointerId !== event.pointerId) return
+    if (Math.abs(event.screenX - drag.screenX) > 3 || Math.abs(event.screenY - drag.screenY) > 3) {
+      draggedRef.current = true
+    }
+    window.island.presence.drag('move', {
+      screenX: event.screenX,
+      screenY: event.screenY,
+      offsetX: drag.offsetX,
+      offsetY: drag.offsetY
+    })
+  }, [])
+
+  const handlePointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    if (dragStart.current?.pointerId !== event.pointerId) return
+    dragStart.current = null
+    window.island.presence.drag('end')
+  }, [])
 
   const sendMediaCommand = useCallback((cmd: MediaCommand): void => {
     void window.island.media.command(cmd).catch((err: unknown) => {
@@ -220,10 +380,23 @@ export default function Island(): React.JSX.Element {
     }
   }, [send])
 
+  const completeOnboarding = useCallback(async (): Promise<void> => {
+    try {
+      await window.island.settings.completeOnboarding()
+      setOnboardingVisible(false)
+      send({ type: 'OUTSIDE' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      send({ type: 'ALERT', payload: { title: 'Could not save setup', message, type: 'error' } })
+    }
+  }, [send])
+
   return (
-    <div className="island-container">
+    <div
+      className={`island-container island-dock--${requestedPresence === 'glance' ? dock : 'center'}${fullscreenHidden ? ' island-container--hidden' : ''}`}
+    >
       <motion.div
-        className={`island-pill island-state--${state}`}
+        className={`island-pill island-state--${state} island-presence--${visualPresence}`}
         layout
         animate={{
           width: size.width,
@@ -236,7 +409,13 @@ export default function Island(): React.JSX.Element {
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         onMouseMove={handleExpandedActivity}
-        onPointerDown={handleExpandedActivity}
+        onPointerDown={(event) => {
+          handlePointerDown(event)
+          handleExpandedActivity()
+        }}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
         onKeyDown={handleExpandedActivity}
         onAnimationComplete={() => setContentReadyState(state)}
       >
@@ -255,7 +434,9 @@ export default function Island(): React.JSX.Element {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.08 }}
           >
-            {state === 'idle' && null}
+            {state === 'idle' && visualPresence === 'glance' && (
+              <span className="island-label">Mino</span>
+            )}
             {state === 'compact' &&
               (launcherStatus ? (
                 <LauncherCompactWidget status={launcherStatus} />
@@ -303,19 +484,25 @@ export default function Island(): React.JSX.Element {
                 className="island-expanded-content island-expanded-content--activities"
                 onClick={handleExpandedContentClick}
               >
-                <div className="island-expanded-system-widgets">
-                  <ClockWidget />
-                  <BatteryWidget percent={battery.percent} charging={battery.charging} />
-                </div>
-                {media && !activities.activity && (
-                  <MediaExpandedWidget media={media} onCommand={sendMediaCommand} />
+                {onboardingVisible ? (
+                  <OnboardingCard hotkey={voiceHotkeyLabel} onComplete={completeOnboarding} />
+                ) : (
+                  <>
+                    <div className="island-expanded-system-widgets">
+                      <ClockWidget />
+                      <BatteryWidget percent={battery.percent} charging={battery.charging} />
+                    </div>
+                    {media && !activities.activity && (
+                      <MediaExpandedWidget media={media} onCommand={sendMediaCommand} />
+                    )}
+                    <ActivityWidgets
+                      activity={activities.activity}
+                      config={activities.config}
+                      completedRounds={activities.stats?.completedRounds ?? 0}
+                      sendCommand={activities.sendCommand}
+                    />
+                  </>
                 )}
-                <ActivityWidgets
-                  activity={activities.activity}
-                  config={activities.config}
-                  completedRounds={activities.stats?.completedRounds ?? 0}
-                  sendCommand={activities.sendCommand}
-                />
               </div>
             )}
             {state === 'alert' && snapshot.context.alert && (
@@ -348,6 +535,30 @@ export default function Island(): React.JSX.Element {
         onVisibilityChange={setDevPanelVisible}
         onActivity={handleExpandedActivity}
       />
+    </div>
+  )
+}
+
+function OnboardingCard({
+  hotkey,
+  onComplete
+}: {
+  hotkey: string
+  onComplete: () => void
+}): React.JSX.Element {
+  return (
+    <div className="island-onboarding">
+      <div>
+        <p className="island-onboarding-eyebrow">WELCOME TO MINO</p>
+        <h2>Hands-free shortcuts, privately.</h2>
+        <p>Press {hotkey}, or say “Hey Mino” when wake word is enabled.</p>
+        <ul>
+          <li>“Open Chrome”</li>
+          <li>“Start focus”</li>
+          <li>“Set timer for 10 minutes”</li>
+        </ul>
+      </div>
+      <button onClick={onComplete}>Get started</button>
     </div>
   )
 }

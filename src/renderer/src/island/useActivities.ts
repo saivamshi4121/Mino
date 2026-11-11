@@ -341,5 +341,13 @@ export function useActivities(send: (event: IslandEvent) => void): {
     }
   }, [reportError, stopTicker])
 
+  useEffect(() => {
+    return window.island.onModuleEvent((event) => {
+      if (event.type !== 'settings.updated') return
+      configRef.current = event.payload.pomodoro
+      setConfig(event.payload.pomodoro)
+    })
+  }, [])
+
   return { activity, config, stats, handleModuleEvent, sendCommand }
 }

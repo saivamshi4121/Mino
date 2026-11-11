@@ -4,9 +4,9 @@ import { setup, assign } from 'xstate'
 export const ISLAND_SIZES = {
   idle: { width: 140, height: 36, borderRadius: 18 },
   compact: { width: 220, height: 38, borderRadius: 19 },
-  listening: { width: 280, height: 52, borderRadius: 26 },
+  listening: { width: 440, height: 150, borderRadius: 32 },
   expanded: { width: 440, height: 150, borderRadius: 32 },
-  alert: { width: 400, height: 84, borderRadius: 28 }
+  alert: { width: 440, height: 150, borderRadius: 32 }
 } as const
 
 export type IslandState = keyof typeof ISLAND_SIZES
@@ -26,6 +26,7 @@ export interface IslandContext {
 export type IslandEvent =
   | { type: 'HOVER' }
   | { type: 'CLICK' }
+  | { type: 'SUMMON' }
   | { type: 'OUTSIDE' }
   | { type: 'KEEP_OPEN' }
   | { type: 'LISTEN_START' }
@@ -42,7 +43,7 @@ export const islandMachine = setup({
   },
   delays: {
     IDLE_TIMEOUT: 4000,
-    EXPANDED_TIMEOUT: 15000 // longer timeout while user is interacting
+    EXPANDED_TIMEOUT: 4000
   }
 }).createMachine({
   id: 'island',
@@ -57,6 +58,7 @@ export const islandMachine = setup({
       on: {
         HOVER: { target: 'compact', actions: assign({ previousState: 'idle' }) },
         CLICK: { target: 'expanded', actions: assign({ previousState: 'idle' }) },
+        SUMMON: { target: 'expanded', actions: assign({ previousState: 'idle' }) },
         ACTIVITY_START: {
           target: 'compact',
           actions: assign({ previousState: 'idle', activityActive: true })
@@ -80,6 +82,7 @@ export const islandMachine = setup({
       },
       on: {
         CLICK: { target: 'expanded', actions: assign({ previousState: 'compact' }) },
+        SUMMON: { target: 'expanded', actions: assign({ previousState: 'compact' }) },
         OUTSIDE: { target: 'idle' },
         ACTIVITY_START: { actions: assign({ activityActive: true }) },
         ACTIVITY_STOP: { target: 'idle', actions: assign({ activityActive: false }) },
@@ -112,7 +115,10 @@ export const islandMachine = setup({
     },
     expanded: {
       after: {
-        EXPANDED_TIMEOUT: { target: 'idle' }
+        EXPANDED_TIMEOUT: [
+          { guard: ({ context }) => context.activityActive, target: 'compact' },
+          { target: 'idle' }
+        ]
       },
       on: {
         // Any mouse/input activity inside the pill resets the auto-close timer
@@ -140,7 +146,7 @@ export const islandMachine = setup({
       after: {
         IDLE_TIMEOUT: [
           {
-            guard: ({ context }) => context.previousState === 'compact',
+            guard: ({ context }) => context.previousState === 'compact' || context.activityActive,
             target: 'compact',
             actions: assign({ alert: null })
           },
@@ -148,6 +154,7 @@ export const islandMachine = setup({
         ]
       },
       on: {
+        SUMMON: { target: 'expanded', actions: assign({ previousState: 'alert' }) },
         LISTEN_START: { target: 'listening', actions: assign({ previousState: 'alert' }) },
         ACTIVITY_START: {
           actions: assign({ previousState: 'compact', activityActive: true })

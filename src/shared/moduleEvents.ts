@@ -1,3 +1,5 @@
+import type { MinoSettings } from './settings'
+
 export interface AlertPayload {
   title: string
   message?: string
@@ -97,3 +99,4 @@ export type IslandModuleEvent =
   | {
       type: 'voice.listen'
     }
+  | { type: 'settings.updated'; payload: MinoSettings }

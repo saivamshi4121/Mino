@@ -37,3 +37,6 @@ Ctrl+Alt+Space), voice "open <app>" via Start Menu index + fuzzy match.
 - [x] M1-M4 complete; M4 adds timer/Pomodoro controls, phase alerts, a chime, and persisted daily focus-round counts.
 - [x] M5: Media controls — SMTC polling via PowerShell, media.update IPC event, MediaWidget (compact ticker + expanded now-playing+controls), purple glow for media state, DevPanel media simulation buttons.
 - [x] M1: Transparent frameless always-on-top window (640x300, y=8, screen-saver level), black pill 140x36, click-through with hover toggle via IPC, re-centres on display change.
+- [x] M9: Tray controls, persisted settings window, Windows autostart, configurable monitor placement, first-run onboarding, optional transition sounds, and lower idle media polling.
+- [x] M9 Presence: Added ghost/glance/summon levels, shy cursor avoidance, edge-dwell summon, saved draggable dock placement, and fullscreen/browser foreground styles.
+- [x] M10: Added branded per-user NSIS installer and portable ZIP, external Vosk model loading, rotating crash logs, release documentation, and tag-triggered Windows CI; clean-VM and offline-microphone checks remain pending.

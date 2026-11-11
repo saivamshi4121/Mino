@@ -10,7 +10,8 @@ import type { Module } from './index'
 
 const execFileAsync = promisify(execFile)
 
-const POLL_INTERVAL = 3_000 // ms between SMTC polls
+const IDLE_POLL_INTERVAL = 10_000
+const ACTIVE_POLL_INTERVAL = 1_000
 
 // ── PowerShell helpers (stored as plain string arrays to avoid backtick conflicts) ──
 
@@ -110,7 +111,7 @@ export async function sendMediaCommand(
 
 // ── Module ────────────────────────────────────────────────────────────────────
 
-let interval: NodeJS.Timeout | undefined
+let pollTimer: NodeJS.Timeout | undefined
 let active = false
 let inFlight = false
 let lastTitle = ''
@@ -148,14 +149,20 @@ export const mediaModule: Module = {
       }
     }
 
-    void poll()
-    interval = setInterval(() => void poll(), POLL_INTERVAL)
+    const pollAndSchedule = async (): Promise<void> => {
+      await poll()
+      if (!active) return
+      const delay = lastStatus === 'None' ? IDLE_POLL_INTERVAL : ACTIVE_POLL_INTERVAL
+      pollTimer = setTimeout(() => void pollAndSchedule(), delay)
+    }
+
+    void pollAndSchedule()
   },
 
   stop() {
     active = false
-    if (interval) clearInterval(interval)
-    interval = undefined
+    if (pollTimer) clearTimeout(pollTimer)
+    pollTimer = undefined
     lastTitle = ''
     lastArtist = ''
     lastStatus = 'None'

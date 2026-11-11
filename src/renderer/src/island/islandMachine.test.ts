@@ -67,4 +67,31 @@ describe('island activity priority', () => {
 
     actor.stop()
   })
+
+  it('summons the full island and auto-collapses after four seconds', () => {
+    const clock = new SimulatedClock()
+    const actor = createActor(islandMachine, { clock })
+    actor.start()
+
+    actor.send({ type: 'SUMMON' })
+    expect(actor.getSnapshot().value).toBe('expanded')
+    clock.increment(4000)
+    expect(actor.getSnapshot().value).toBe('idle')
+
+    actor.stop()
+  })
+
+  it('returns to glance after summon when an activity is active', () => {
+    const clock = new SimulatedClock()
+    const actor = createActor(islandMachine, { clock })
+    actor.start()
+
+    actor.send({ type: 'ACTIVITY_START' })
+    actor.send({ type: 'SUMMON' })
+    expect(actor.getSnapshot().value).toBe('expanded')
+    clock.increment(4000)
+    expect(actor.getSnapshot().value).toBe('compact')
+
+    actor.stop()
+  })
 })

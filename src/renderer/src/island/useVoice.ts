@@ -97,6 +97,7 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
   const modeRef = useRef<'off' | 'wake' | 'command-pending' | 'command'>('off')
   const listeningRef = useRef(false)
   const wakeWordEnabledRef = useRef(false)
+  const microphoneEnabledRef = useRef(false)
   const aliveRef = useRef(true)
   const lastWakeAtRef = useRef(0)
   const lastVoiceAtRef = useRef(0)
@@ -272,7 +273,8 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
               `Vosk model not found. Extract the small English model to assets/models and create ${MODEL_URL}`
             )
           }
-          const modelUrl = new URL(MODEL_URL, window.location.href).toString()
+          const configuredModelUrl = await window.island.voice.getModelUrl()
+          const modelUrl = new URL(configuredModelUrl, window.location.href).toString()
           modelPromiseRef.current = loadVoskModel(modelUrl)
         }
         try {
@@ -389,6 +391,34 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
     stopCapture()
   }, [createWakeRecognizer, stopCapture])
 
+  const applyVoiceSettings = useCallback(
+    (config: { wakeWordEnabled: boolean; microphoneEnabled: boolean }): void => {
+      microphoneEnabledRef.current = config.microphoneEnabled
+      wakeWordEnabledRef.current = config.wakeWordEnabled && config.microphoneEnabled
+      if (!config.microphoneEnabled && listeningRef.current) {
+        listeningRef.current = false
+        clearCommandTimers()
+        setVoice((current) => ({
+          ...current,
+          status: 'idle',
+          transcript: '',
+          micLevel: 0,
+          capturing: false,
+          wakeWordActive: false
+        }))
+        send({ type: 'LISTEN_END' })
+      }
+      if (!config.microphoneEnabled || (!config.wakeWordEnabled && !listeningRef.current)) {
+        stopCapture()
+        return
+      }
+      if (!listeningRef.current) {
+        void ensureCapture().catch((error: unknown) => failRef.current(error))
+      }
+    },
+    [clearCommandTimers, ensureCapture, send, stopCapture]
+  )
+
   const finish = useCallback(
     (text: string): void => {
       if (!listeningRef.current) return
@@ -445,6 +475,17 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
 
   const start = useCallback((): void => {
     if (listeningRef.current) return
+    if (!microphoneEnabledRef.current) {
+      send({
+        type: 'ALERT',
+        payload: {
+          title: 'Microphone disabled',
+          message: 'Enable the microphone from the Mino tray menu or settings.',
+          type: 'warning'
+        }
+      })
+      return
+    }
     listeningRef.current = true
     modeRef.current = 'command-pending'
     setVoice((current) => ({
@@ -475,11 +516,7 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
     void window.island.voice
       .getConfig()
       .then((config) => {
-        if (!active || !config.wakeWordEnabled) return
-        wakeWordEnabledRef.current = true
-        return ensureCapture().catch((error: unknown) => {
-          if (active) failRef.current(error)
-        })
+        if (active) applyVoiceSettings(config)
       })
       .catch((error: unknown) => {
         if (active) failRef.current(error)
@@ -487,14 +524,15 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
     return () => {
       active = false
     }
-  }, [ensureCapture])
+  }, [applyVoiceSettings])
 
   useEffect(() => {
     const unsubscribe = window.island.onModuleEvent((event: IslandModuleEvent) => {
       if (event.type === 'voice.listen') start()
+      if (event.type === 'settings.updated') applyVoiceSettings(event.payload.voice)
     })
     return unsubscribe
-  }, [start])
+  }, [applyVoiceSettings, start])
 
   useEffect(
     () => () => {

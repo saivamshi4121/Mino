@@ -1,10 +1,9 @@
 {
   "name": "mino",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "version": "0.1.0",
+  "description": "A lightweight Windows dynamic island with offline voice control",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Mino contributors",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

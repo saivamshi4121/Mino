@@ -1,0 +1,152 @@
+html:has(.settings-window),
+body:has(.settings-window) {
+  overflow: auto;
+  background: transparent;
+}
+
+.settings-window {
+  position: relative;
+  min-height: 100vh;
+  padding: 28px;
+  color: rgba(255, 255, 255, 0.9);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(255, 255, 255, 0.11), transparent 55%),
+    linear-gradient(160deg, rgba(23, 23, 28, 0.98), rgba(0, 0, 0, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.16), 0 18px 48px rgba(0, 0, 0, 0.55);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.settings-header,
+.settings-toggle,
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-header {
+  margin-bottom: 24px;
+  -webkit-app-region: drag;
+}
+
+.settings-eyebrow {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.settings-header h1 {
+  margin-top: 3px;
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.settings-close {
+  width: 34px;
+  height: 34px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  font-size: 21px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.settings-section {
+  padding: 17px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-section h2 {
+  margin-bottom: 13px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-field,
+.settings-toggle {
+  display: flex;
+  gap: 12px;
+  margin: 10px 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.settings-field {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.settings-field--number {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-field input,
+.settings-field textarea,
+.settings-field select {
+  min-width: 0;
+  padding: 9px 10px;
+  color: white;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 9px;
+  outline: none;
+  font: inherit;
+}
+
+.settings-field--number input {
+  width: 76px;
+}
+
+.settings-field textarea {
+  resize: vertical;
+  font-family: Consolas, monospace;
+}
+
+.settings-field select option {
+  color: white;
+  background: #17171b;
+}
+
+.settings-toggle input {
+  accent-color: #9c88ff;
+}
+
+.settings-message {
+  margin: 9px 0;
+  color: #8ee6b2;
+  font-size: 12px;
+}
+
+.settings-message--error {
+  color: #ff9a9a;
+}
+
+.settings-footer {
+  justify-content: flex-end;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-save {
+  padding: 10px 15px;
+  color: #101013;
+  background: #e8e7ef;
+  border: 0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-save:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

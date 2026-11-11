@@ -1,72 +1,87 @@
-# mino
+# Dynamic Island
 
-An Electron application with React and TypeScript
+Mino is a lightweight Windows island for glanceable activity and offline voice
+commands. It runs locally on Windows 10/11 and uses Vosk for on-device speech
+recognition.
 
-## Recommended IDE Setup
+## Features
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- Media controls, timers, Pomodoro focus sessions, and a compact activity dock.
+- Ghost, glance, and summon presence modes with cursor-aware hiding.
+- Windows tray controls, configurable hotkey, microphone and wake word.
+- App launching, system status, and voice-controlled media and timers.
+- Offline speech recognition; no audio is uploaded to a Mino service.
 
-## Project Setup
+## Screenshots
 
-### Install
+Screenshots will be added before public release.
 
-```bash
-$ npm install
-```
+## Install
 
-### Development
+Download `Dynamic-Island-0.1.0-setup.exe` for a per-user installation, or
+`Dynamic-Island-0.1.0-portable.zip` to extract and run without installing.
+The installer offers an optional start-with-Windows checkbox. The offline voice
+model is included; no model download or network connection is required for voice
+recognition.
 
-```bash
-$ npm run dev
-```
+## Voice commands
 
-### Build
+Enable the microphone and wake word in Settings, then say “Hey Mino” or “Hey
+Island”. Use the configured hotkey to start a voice command directly.
 
-```bash
-# For windows
-$ npm run build:win
+| Example | Action |
+| --- | --- |
+| “Open Notepad” | Find and launch an installed app |
+| “Close Notepad” | Close a running app |
+| “Play music” / “pause” / “next track” | Control media playback |
+| “Set a timer for five minutes” | Start a timer |
+| “Start focus” | Start a Pomodoro session |
+| “How much battery?” | Read battery status |
+| “Set volume to 30 percent” | Change system volume |
+| “Search cats on YouTube” | Open a browser search |
 
-# For macOS
-$ npm run build:mac
+Voice recognition runs on-device. Search commands intentionally open Google or
+YouTube in the browser, which then handles the search request.
 
-# For Linux
-$ npm run build:linux
-```
+## Configuration
 
-## App launcher
+Settings are stored at `%APPDATA%\dynamic-island\config.json`. Use the Settings
+window to change supported values.
 
-On Windows, open the temporary dev panel with the grave-accent key, then enter
-commands such as `open chrome and notepad`, `launch code`, or `close notepad`.
-The app list is indexed from Start Menu shortcuts and Store apps, cached under
-`%APPDATA%\dynamic-island\apps.json`, and refreshed every six hours. Use
-**Refresh Apps** in the panel to refresh it immediately.
+| Setting | Purpose |
+| --- | --- |
+| `voice.hotkey` | Voice activation shortcut |
+| `voice.wakeWordEnabled` | Enable or disable wake-word listening |
+| `voice.microphoneEnabled` | Enable or disable microphone access |
+| `pomodoro.focusMinutes` | Focus-session duration |
+| `pomodoro.breakMinutes` | Short-break duration |
+| `pomodoro.longBreakMinutes` | Long-break duration |
+| `launcher.aliases` | App-launcher aliases |
+| `display.mode` | `primary`, `chosen`, or `cursor` monitor |
+| `appearance.dock` | `left`, `center`, or `right` glance position |
+| `appearance.hideFullscreen` | Hide the island over fullscreen apps |
+| `appearance.browserDot` | Reduce the island to a dot over browsers |
+| `soundsEnabled` | Play subtle transition sounds |
 
-Launcher aliases are configured in `config/default.json` as alias-to-app-name
-pairs under `launcher.aliases`. An alias is applied when its target app name is
-present in the indexed Start Menu apps.
+## Build from source
 
-## Offline voice commands
-
-By default, the offline wake word **“Hey Mino”** or **“Hey Island”** activates
-voice commands; **Ctrl+Alt+Space** is the default hotkey. If another app uses it,
-Mino tries **Ctrl+Alt+M**, then **Ctrl+Shift+Space**, and shows which shortcut
-was activated. Allow microphone access.
-Recognition runs locally with Vosk; no audio is sent online. Set
-`voice.wakeWordEnabled` to `false` in `config/default.json` to disable always-on
-wake-word listening.
-
-Supported commands include opening and closing apps, media playback, timers,
-Pomodoro focus, battery status, system volume, and Google/YouTube search. For
-example: “open Notepad”, “set timer for five minutes”, “start focus”, or “search
-cats on YouTube”.
-
-The app uses the Vosk English-Indian model `vosk-model-small-en-in-0.4`. The
-runtime archive is in `assets/models/runtime`; if you need to recreate it, run
-this from the project root:
+Requires Node.js 22 and npm on Windows.
 
 ```powershell
-tar.exe -czf assets/models/runtime/vosk-model-small-en-in-0.4.tar.gz -C assets/models vosk-model-small-en-in-0.4
+npm ci
+npm run dev
+npm run build
+npm run dist
 ```
 
-The archive must contain the model folder at its root. Set the hotkey in
-`config/default.json` under `voice.hotkey`.
+`npm run dist` creates the NSIS installer and portable ZIP in `dist/`. The Vosk
+model archive is bundled from `assets/models/runtime/` into the packaged app.
+
+## Privacy
+
+Microphone audio is processed locally by the bundled Vosk model. Mino does not
+send audio or transcripts to a Mino server. Internet searches are only sent to
+the selected search provider when you explicitly issue a search command.
+
+See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) for dependency licenses
+and [RELEASE.md](./RELEASE.md) for release validation steps.

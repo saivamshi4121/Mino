@@ -13,6 +13,22 @@
   },
   "voice": {
     "hotkey": "Control+Alt+Space",
-    "wakeWordEnabled": true
-  }
+    "wakeWordEnabled": true,
+    "microphoneEnabled": true
+  },
+  "display": {
+    "mode": "primary",
+    "displayId": 0
+  },
+  "appearance": {
+    "dock": "center",
+    "position": {
+      "x": null,
+      "y": null
+    },
+    "hideFullscreen": true,
+    "browserDot": true
+  },
+  "soundsEnabled": false,
+  "onboardingComplete": false
 }
