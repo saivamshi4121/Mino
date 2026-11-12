@@ -79,7 +79,11 @@ export function parseVoiceCommand(input: string): VoiceCommand | null {
     .trim()
   if (!command) return null
 
-  if (/^(?:what(?:'s| is) my battery|battery status|battery level)$/.test(command)) {
+  if (
+    /^(?:what(?:'s| is) my battery|how much battery(?: do i have)?|battery status|battery level)$/.test(
+      command
+    )
+  ) {
     return { type: 'battery.query' }
   }
   if (/^(?:start focus|start pomodoro)$/.test(command)) {
@@ -122,10 +126,12 @@ export function parseVoiceCommand(input: string): VoiceCommand | null {
   if (command === 'mute') return { type: 'volume.mute', muted: true }
   if (command === 'unmute') return { type: 'volume.mute', muted: false }
 
-  const volume = command.match(/^volume\s+(\d{1,3})$/)
+  const volume = command.match(
+    /^(?:(?:set|change)\s+(?:the\s+)?)?volume(?:\s+to)?\s+(.+?)(?:\s+percent(?:age)?)?$/
+  )
   if (volume) {
-    const level = Number(volume[1])
-    return level <= 100 ? { type: 'volume.set', level } : null
+    const level = parseSpokenNumber(volume[1])
+    return level !== null && level <= 100 ? { type: 'volume.set', level } : null
   }
 
   const search = command.match(/^search\s+(.+)\s+on\s+(youtube|google)$/)

@@ -212,9 +212,7 @@ export default function Island(): React.JSX.Element {
             send({
               type: 'ALERT',
               payload: {
-                title: status.message?.startsWith("Couldn't find")
-                  ? "Couldn't find app"
-                  : 'App launch failed',
+                title: status.errorTitle ?? 'App command failed',
                 message: status.message,
                 type: 'error'
               }

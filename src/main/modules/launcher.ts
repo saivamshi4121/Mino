@@ -1,5 +1,5 @@
 import { app, shell } from 'electron'
-import { execFile } from 'child_process'
+import { execFile, spawn } from 'child_process'
 import { mkdir, readFile, rename, writeFile } from 'fs/promises'
 import { basename, join } from 'path'
 import { promisify } from 'util'
@@ -266,8 +266,23 @@ function emitStatus(emit: (event: IslandModuleEvent) => void, payload: LauncherS
   emit({ type: 'launcher.status', payload })
 }
 
-function failure(name: string, reason: string): LauncherResult {
-  return { ok: false, matched: null, reason: `Couldn't find or launch "${name}": ${reason}` }
+function failure(reason: string, matched: string | null = null): LauncherResult {
+  return { ok: false, matched, reason }
+}
+
+function launchUwpApp(appId: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('explorer.exe', [`shell:AppsFolder\\${appId}`], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    })
+    child.once('error', reject)
+    child.once('spawn', () => {
+      child.unref()
+      resolve()
+    })
+  })
 }
 
 async function openApp(
@@ -279,13 +294,13 @@ async function openApp(
     match = await findApp(name)
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    emitStatus(emit, { phase: 'failed', name, message: reason })
-    return failure(name, reason)
+    emitStatus(emit, { phase: 'failed', name, message: reason, errorTitle: 'App launch failed' })
+    return failure(reason)
   }
   if (!match) {
     const reason = `Couldn't find "${name}" in the app index`
-    emitStatus(emit, { phase: 'failed', name, message: reason })
-    return { ok: false, matched: null, reason }
+    emitStatus(emit, { phase: 'failed', name, message: reason, errorTitle: "Couldn't find app" })
+    return { ok: false, matched: null, reason, notFound: true }
   }
 
   let iconDataUrl: string | undefined
@@ -307,10 +322,7 @@ async function openApp(
       const error = await shell.openPath(match.shortcutPath)
       if (error) throw new Error(error)
     } else if (match.appId) {
-      await execFileAsync('explorer.exe', [`shell:AppsFolder\\${match.appId}`], {
-        windowsHide: true,
-        timeout: 10_000
-      })
+      await launchUwpApp(match.appId)
     } else {
       throw new Error('The app entry has no launch target')
     }
@@ -318,8 +330,14 @@ async function openApp(
     return { ok: true, matched: match.name, reason: null }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    emitStatus(emit, { phase: 'failed', name: match.name, iconDataUrl, message: reason })
-    return failure(name, reason)
+    emitStatus(emit, {
+      phase: 'failed',
+      name: match.name,
+      iconDataUrl,
+      message: reason,
+      errorTitle: `Couldn't open ${match.name}`
+    })
+    return failure(reason, match.name)
   }
 }
 
@@ -332,19 +350,24 @@ async function closeApp(
     match = await findApp(name)
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    emitStatus(emit, { phase: 'failed', name, message: reason })
-    return failure(name, reason)
+    emitStatus(emit, { phase: 'failed', name, message: reason, errorTitle: 'App command failed' })
+    return failure(reason)
   }
   if (!match) {
     const reason = `Couldn't find "${name}" in the app index`
-    emitStatus(emit, { phase: 'failed', name, message: reason })
-    return { ok: false, matched: null, reason }
+    emitStatus(emit, { phase: 'failed', name, message: reason, errorTitle: "Couldn't find app" })
+    return { ok: false, matched: null, reason, notFound: true }
   }
 
   emitStatus(emit, { phase: 'closing', name: match.name })
   if (!match.processName) {
     const reason = `No process name is available for "${match.name}"`
-    emitStatus(emit, { phase: 'failed', name: match.name, message: reason })
+    emitStatus(emit, {
+      phase: 'failed',
+      name: match.name,
+      message: reason,
+      errorTitle: `Couldn't close ${match.name}`
+    })
     return { ok: false, matched: match.name, reason }
   }
   try {
@@ -356,7 +379,12 @@ async function closeApp(
     return { ok: true, matched: match.name, reason: null }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    emitStatus(emit, { phase: 'failed', name: match.name, message: reason })
+    emitStatus(emit, {
+      phase: 'failed',
+      name: match.name,
+      message: reason,
+      errorTitle: `Couldn't close ${match.name}`
+    })
     return { ok: false, matched: match.name, reason }
   }
 }

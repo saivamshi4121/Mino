@@ -42,6 +42,7 @@ export interface LauncherResult {
   ok: boolean
   matched: string | null
   reason: string | null
+  notFound?: boolean
 }
 
 export interface LauncherOperationResult extends LauncherResult {
@@ -59,6 +60,7 @@ export interface LauncherStatus {
   name: string
   iconDataUrl?: string
   message?: string
+  errorTitle?: string
 }
 
 export interface VoiceCommandResult {

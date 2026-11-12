@@ -34,6 +34,7 @@ export async function executeVoiceCommand(
   switch (command.type) {
     case 'launcher': {
       const result = await runLauncherCommand(input, emit)
+      const failed = result.results.find((entry) => !entry.ok)
       const names = result.results
         .map((entry) => entry.matched)
         .filter((name): name is string => Boolean(name))
@@ -42,7 +43,14 @@ export async function executeVoiceCommand(
         ? { ok: true, title: `${action} ${names.join(' and ')}`, type: 'success' }
         : {
             ok: false,
-            title: result.results.length === 0 ? "Didn't catch that" : "Couldn't find app",
+            title:
+              result.results.length === 0
+                ? "Didn't catch that"
+                : failed?.notFound
+                  ? "Couldn't find app"
+                  : failed?.matched
+                    ? `${failed.action === 'open' ? "Couldn't open" : "Couldn't close"} ${failed.matched}`
+                    : 'App command failed',
             message: result.reason ?? undefined,
             type: 'error'
           }

@@ -304,6 +304,7 @@ export function useVoice(send: (event: IslandEvent) => void): VoiceState & {
         audio: {
           channelCount: 1,
           sampleRate: SAMPLE_RATE,
+          autoGainControl: true,
           echoCancellation: true,
           noiseSuppression: true
         }
